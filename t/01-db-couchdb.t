@@ -53,5 +53,6 @@ can_ok($db, qw/all_dbs
                create_doc
                update_doc
                delete_doc
+               get_doc
                view
              /);

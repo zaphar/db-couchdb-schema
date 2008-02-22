@@ -41,6 +41,12 @@ sub all_dbs {
     return $self->_call(GET => $self->_uri_all_dbs()); 
 }
 
+sub db_info {
+    my $self = shift;
+    my $db = shift;
+    return $self->_call(GET => $self->_uri_db($db));
+}
+
 sub create_db {
     my $self = shift;
     my $db = shift;
@@ -58,22 +64,44 @@ sub create_doc {
     my $db = shift;
     my $doc = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(PUT => $self->_uri_db_doc($db, $doc), $jdoc);
+    return $self->_call(POST => $self->_uri_db($db), $jdoc);
 }
+
+sub create_named_doc {
+    my $self = shift;
+    my $db = shift;
+    my $doc = shift;
+    my $name = shift;
+    my $jdoc = $self->json()->encode($doc);
+    return $self->_call(PUT => $self->_uri_db_doc($db, $name), $jdoc);
+}
+
 
 sub update_doc {
     my $self = shift;
     my $db   = shift;
+    my $name = shift;
     my $doc  = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(POST => $self->_uri_db_doc($db, $doc), $jdoc);
+    return $self->_call(PUT => $self->_uri_db_doc($db, $name), $jdoc);
 }
 
 sub delete_doc {
     my $self = shift;
     my $db = shift;
     my $doc = shift;
-    return $self->_call(DELETE => $self->_uri_db_doc($db, $doc));
+    my $rev = shift;
+    my $uri = $self->_uri_db_doc($db, $doc);
+    $uri->query('rev='.$rev);
+    warn $uri->canonical();
+    return $self->_call(DELETE => $uri);
+}
+
+sub get_doc {
+    my $self = shift;
+    my $db = shift;
+    my $doc = shift;
+    return $self->_call(GET => $self->_uri_db_doc($db, $doc));
 }
 
 sub view {
@@ -108,14 +136,14 @@ sub uri {
     my $u = URI->new();
     $u->scheme("http");
     $u->host($self->{host}.':'.$self->{port});
-    return $u
+    return $u;
 }
 
 sub _uri_all_dbs {
     my $self = shift;
     my $uri = $self->uri();
     $uri->path('/_all_dbs');
-    return $uri->canonical();
+    return $uri;
 }
 
 sub _uri_db {
@@ -123,7 +151,7 @@ sub _uri_db {
     my $db = shift;
     my $uri = $self->uri();
     $uri->path('/'.$db);
-    return $uri->canonical();
+    return $uri;
 }
 
 sub _uri_db_docs {
@@ -131,7 +159,7 @@ sub _uri_db_docs {
     my $db = shift;
     my $uri = $self->uri();
     $uri->path('/'.$db.'/_all_docs');
-    return $uri->canonical();
+    return $uri;
 }
 
 sub _uri_db_doc {
@@ -140,7 +168,7 @@ sub _uri_db_doc {
     my $doc = shift;
     my $uri = $self->uri();
     $uri->path('/'.$db.'/'.$doc);
-    return $uri->canonical();
+    return $uri;
 }
 
 sub _uri_db_bulk_doc {
@@ -148,7 +176,7 @@ sub _uri_db_bulk_doc {
     my $db = shift;
     my $uri = $self->uri();
     $uri->path('/'.$db.'/_bulk_docs');
-    return $uri->canonical();
+    return $uri;
 }
 
 sub _uri_db_view {
@@ -157,7 +185,7 @@ sub _uri_db_view {
     my $view = shift;
     my $uri = $self->uri();
     $uri->path('/'.$db.'/_view/'.$view);
-    return $uri->canonical();
+    return $uri;
 }
 
 sub _call {
@@ -170,7 +198,9 @@ sub _call {
     $req->content($content);
          
     my $ua = LWP::UserAgent->new();
-    return $ua->request($req);
+    my $response = $ua->request($req)->content();
+    my $decoded = $self->json()->decode($response);
+    return $decoded;
 }
 
 1;
