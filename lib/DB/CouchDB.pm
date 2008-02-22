@@ -203,4 +203,12 @@ sub _call {
     return $decoded;
 }
 
+=head1 TODO
+
+- add view creation helpers
+- add more robust error handling
+- documentation
+
+=cut
+
 1;
