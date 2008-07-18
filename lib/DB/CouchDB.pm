@@ -95,7 +95,6 @@ sub delete_doc {
     my $rev = shift;
     my $uri = $self->_uri_db_doc($db, $doc);
     $uri->query('rev='.$rev);
-    warn $uri->canonical();
     return $self->_call(DELETE => $uri);
 }
 
