@@ -2,9 +2,11 @@ package DB::CouchDB;
 
 use warnings;
 use strict;
-use JSON;
+use JSON -convert_blessed_universally;
 use LWP::UserAgent;
 use URI;
+
+$DB::CouchDB::VERSION = 0.1;
 
 =head1 NAME
 
@@ -202,6 +204,10 @@ sub _call {
     my $decoded = $self->json()->decode($response);
     return $decoded;
 }
+
+=head1 AUTHOR
+
+Jeremy Wall <jeremy@marzhillstudios.com>
 
 =head1 TODO
 
