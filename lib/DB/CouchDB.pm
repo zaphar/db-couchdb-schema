@@ -33,9 +33,19 @@ sub new{
         if (!exists $opts{port});
     my $obj = {%opts};
     $obj->{json} = JSON->new();
-    #my $uri = URI->new('http://'.$opts{host}.':'.$opts{port});
-    #$obj->{uri} = $uri;
     return bless $obj, $class; 
+}
+
+sub host {
+    return shift->{host};
+}
+
+sub port {
+    return shift->{port};
+}
+
+sub db {
+    return shift->{db};
 }
 
 sub all_dbs {
@@ -45,71 +55,78 @@ sub all_dbs {
 
 sub db_info {
     my $self = shift;
-    my $db = shift;
-    return $self->_call(GET => $self->_uri_db($db));
+    return $self->_call(GET => $self->_uri_db());
 }
 
 sub create_db {
     my $self = shift;
-    my $db = shift;
-    return $self->_call(PUT => $self->_uri_db($db));
+    return $self->_call(PUT => $self->_uri_db());
 }
 
 sub delete_db {
     my $self = shift;
-    my $db = shift;
-    return $self->_call(DELETE => $self->_uri_db($db));
+    return $self->_call(DELETE => $self->_uri_db());
 }
 
 sub create_doc {
     my $self = shift;
-    my $db = shift;
     my $doc = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(POST => $self->_uri_db($db), $jdoc);
+    return $self->_call(POST => $self->_uri_db(), $jdoc);
 }
 
 sub create_named_doc {
     my $self = shift;
-    my $db = shift;
     my $doc = shift;
     my $name = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(PUT => $self->_uri_db_doc($db, $name), $jdoc);
+    return $self->_call(PUT => $self->_uri_db_doc($name), $jdoc);
 }
 
 
 sub update_doc {
     my $self = shift;
-    my $db   = shift;
     my $name = shift;
     my $doc  = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(PUT => $self->_uri_db_doc($db, $name), $jdoc);
+    return $self->_call(PUT => $self->_uri_db_doc($name), $jdoc);
 }
 
 sub delete_doc {
     my $self = shift;
-    my $db = shift;
     my $doc = shift;
     my $rev = shift;
-    my $uri = $self->_uri_db_doc($db, $doc);
+    my $uri = $self->_uri_db_doc($doc);
     $uri->query('rev='.$rev);
     return $self->_call(DELETE => $uri);
 }
 
 sub get_doc {
     my $self = shift;
-    my $db = shift;
     my $doc = shift;
-    return $self->_call(GET => $self->_uri_db_doc($db, $doc));
+    return $self->_call(GET => $self->_uri_db_doc($doc));
 }
 
+## TODO: still need to handle windowing on views
 sub view {
     my $self = shift;
-    my $db = shift;
     my $view = shift;
-    return $self->_call(GET => $self->_uri_db_view($db, $view));
+    my $args = shift; ## do we want to reduce the view?
+    my $uri = $self->_uri_db_view($view);
+    if ($args) {
+        my $argstring = _valid_view_args($args);
+        $uri->query($argstring);
+    }
+    return $self->_call(GET => $uri);
+}
+
+sub _valid_view_args {
+    my $args = shift;
+    my $string;
+    my @str_parts = map {"$_=$args->{$_}"} keys %$args;
+    $string = join('&', @str_parts);
+
+    return $string;
 }
 
 sub json {
@@ -149,7 +166,7 @@ sub _uri_all_dbs {
 
 sub _uri_db {
     my $self = shift;
-    my $db = shift;
+    my $db = $self->{db};
     my $uri = $self->uri();
     $uri->path('/'.$db);
     return $uri;
@@ -157,7 +174,7 @@ sub _uri_db {
 
 sub _uri_db_docs {
     my $self = shift;
-    my $db = shift;
+    my $db = $self->{db};
     my $uri = $self->uri();
     $uri->path('/'.$db.'/_all_docs');
     return $uri;
@@ -165,7 +182,7 @@ sub _uri_db_docs {
 
 sub _uri_db_doc {
     my $self = shift;
-    my $db = shift;
+    my $db = $self->{db};
     my $doc = shift;
     my $uri = $self->uri();
     $uri->path('/'.$db.'/'.$doc);
@@ -174,7 +191,7 @@ sub _uri_db_doc {
 
 sub _uri_db_bulk_doc {
     my $self = shift;
-    my $db = shift;
+    my $db = $self->{db};
     my $uri = $self->uri();
     $uri->path('/'.$db.'/_bulk_docs');
     return $uri;
@@ -182,7 +199,7 @@ sub _uri_db_bulk_doc {
 
 sub _uri_db_view {
     my $self = shift;
-    my $db = shift;
+    my $db = $self->{db};
     my $view = shift;
     my $uri = $self->uri();
     $uri->path('/'.$db.'/_view/'.$view);
