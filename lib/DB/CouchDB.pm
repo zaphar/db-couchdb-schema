@@ -265,7 +265,13 @@ sub errstr {
 
 sub mk_iter {
     my $rows = shift;
-    my @list = map { @{$_->{value}} } @$rows;
+    my $mapper = sub {
+        my $row = shift;
+        return @{ $_->{value} }
+            if ref($_{value}) eq 'ARRAY';
+        return $_->{value};
+    };
+    my @list = map { $mapper->($_) } @$rows;
     my $index = 0;
     return sub {
         return if $index > $#list;
@@ -291,6 +297,7 @@ sub err {
 sub errstr {
     return shift->{reason};
 }
+
 
 =head1 AUTHOR
 
