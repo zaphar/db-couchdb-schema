@@ -50,29 +50,29 @@ sub db {
 
 sub all_dbs {
     my $self = shift;
-    return DB::CoucnDB::Result->new($self->_call(GET => $self->_uri_all_dbs())); 
+    return DB::CouchDB::Result->new($self->_call(GET => $self->_uri_all_dbs())); 
 }
 
 sub db_info {
     my $self = shift;
-    return DB::CoucnDB::Result->new($self->_call(GET => $self->_uri_db()));
+    return DB::CouchDB::Result->new($self->_call(GET => $self->_uri_db()));
 }
 
 sub create_db {
     my $self = shift;
-    return DB::CoucnDB::Result->new($self->_call(PUT => $self->_uri_db()));
+    return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db()));
 }
 
 sub delete_db {
     my $self = shift;
-    return DB::CoucnDB::Result->new($self->_call(DELETE => $self->_uri_db()));
+    return DB::CouchDB::Result->new($self->_call(DELETE => $self->_uri_db()));
 }
 
 sub create_doc {
     my $self = shift;
     my $doc = shift;
     my $jdoc = $self->json()->encode($doc);
-    return DB::CoucnDB::Result->new($self->_call(POST => $self->_uri_db(), $jdoc));
+    return DB::CouchDB::Result->new($self->_call(POST => $self->_uri_db(), $jdoc));
 }
 
 sub create_named_doc {
@@ -80,7 +80,7 @@ sub create_named_doc {
     my $doc = shift;
     my $name = shift;
     my $jdoc = $self->json()->encode($doc);
-    return DB::CoucnDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
+    return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
 }
 
 
@@ -89,7 +89,7 @@ sub update_doc {
     my $name = shift;
     my $doc  = shift;
     my $jdoc = $self->json()->encode($doc);
-    return DB::CoucnDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
+    return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
 }
 
 sub delete_doc {
@@ -98,13 +98,13 @@ sub delete_doc {
     my $rev = shift;
     my $uri = $self->_uri_db_doc($doc);
     $uri->query('rev='.$rev);
-    return DB::CoucnDB::Result->new($self->_call(DELETE => $uri));
+    return DB::CouchDB::Result->new($self->_call(DELETE => $uri));
 }
 
 sub get_doc {
     my $self = shift;
     my $doc = shift;
-    return DB::CoucnDB::Result->new($self->_call(GET => $self->_uri_db_doc($doc)));
+    return DB::CouchDB::Result->new($self->_call(GET => $self->_uri_db_doc($doc)));
 }
 
 ## TODO: still need to handle windowing on views
@@ -275,8 +275,6 @@ sub next_for_key {
     if (! defined $self->{$ph} ) {
         my $iter = mk_iter($self->{data}, 'value', sub {
             my $item = shift;
-            warn "Found match for $key", $/
-                if $item->{key} eq $key;
             return $item 
                 if $item->{key} eq $key;
             return;
@@ -292,9 +290,9 @@ sub mk_iter {
     my $filter = shift || sub { return $_ };
     my $mapper = sub {
         my $row = shift;
-        return @{ $_->{$key} }
-            if ref($_{$key}) eq 'ARRAY';
-        return $_->{$key};
+        return @{ $row->{$key} }
+            if ref($row->{$key}) eq 'ARRAY';
+        return $row->{$key};
     };
     my @list = map { $mapper->($_) } grep { $filter->($_) } @$rows;
     my $index = 0;
