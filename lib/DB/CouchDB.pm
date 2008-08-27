@@ -50,29 +50,29 @@ sub db {
 
 sub all_dbs {
     my $self = shift;
-    return $self->_call(GET => $self->_uri_all_dbs()); 
+    return DB::CoucnDB::Result->new($self->_call(GET => $self->_uri_all_dbs())); 
 }
 
 sub db_info {
     my $self = shift;
-    return $self->_call(GET => $self->_uri_db());
+    return DB::CoucnDB::Result->new($self->_call(GET => $self->_uri_db()));
 }
 
 sub create_db {
     my $self = shift;
-    return $self->_call(PUT => $self->_uri_db());
+    return DB::CoucnDB::Result->new($self->_call(PUT => $self->_uri_db()));
 }
 
 sub delete_db {
     my $self = shift;
-    return $self->_call(DELETE => $self->_uri_db());
+    return DB::CoucnDB::Result->new($self->_call(DELETE => $self->_uri_db()));
 }
 
 sub create_doc {
     my $self = shift;
     my $doc = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(POST => $self->_uri_db(), $jdoc);
+    return DB::CoucnDB::Result->new($self->_call(POST => $self->_uri_db(), $jdoc));
 }
 
 sub create_named_doc {
@@ -80,7 +80,7 @@ sub create_named_doc {
     my $doc = shift;
     my $name = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(PUT => $self->_uri_db_doc($name), $jdoc);
+    return DB::CoucnDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
 }
 
 
@@ -89,7 +89,7 @@ sub update_doc {
     my $name = shift;
     my $doc  = shift;
     my $jdoc = $self->json()->encode($doc);
-    return $self->_call(PUT => $self->_uri_db_doc($name), $jdoc);
+    return DB::CoucnDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
 }
 
 sub delete_doc {
@@ -98,13 +98,13 @@ sub delete_doc {
     my $rev = shift;
     my $uri = $self->_uri_db_doc($doc);
     $uri->query('rev='.$rev);
-    return $self->_call(DELETE => $uri);
+    return DB::CoucnDB::Result->new($self->_call(DELETE => $uri));
 }
 
 sub get_doc {
     my $self = shift;
     my $doc = shift;
-    return $self->_call(GET => $self->_uri_db_doc($doc));
+    return DB::CoucnDB::Result->new($self->_call(GET => $self->_uri_db_doc($doc)));
 }
 
 ## TODO: still need to handle windowing on views
@@ -273,6 +273,23 @@ sub mk_iter {
         $index++;
         return $row;
     };
+}
+
+package DB::CouchDB::Result;
+
+sub new {
+    my $self = shift;
+    my $result = shift;
+    
+    return bless $result, $self;
+}
+
+sub err {
+    return shift->{error};
+}
+
+sub errstr {
+    return shift->{reason};
 }
 
 =head1 AUTHOR
