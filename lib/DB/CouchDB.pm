@@ -6,7 +6,7 @@ use JSON -convert_blessed_universally;
 use LWP::UserAgent;
 use URI;
 
-$DB::CouchDB::VERSION = 0.1;
+$DB::CouchDB::VERSION = 0.2;
 
 =head1 NAME
 
@@ -117,7 +117,7 @@ sub view {
         my $argstring = _valid_view_args($args);
         $uri->query($argstring);
     }
-    return $self->_call(GET => $uri);
+    return DB::CouchDB::Iter->new($self->_call(GET => $uri));
 }
 
 sub _valid_view_args {
@@ -219,6 +219,60 @@ sub _call {
     my $response = $ua->request($req)->content();
     my $decoded = $self->json()->decode($response);
     return $decoded;
+}
+
+package DB::CouchDB::Iter;
+
+sub new {
+    my $self = shift;
+    my $results = shift;
+    my $rows = $results->{rows};
+    
+    return bless { data => $rows,
+                   count => $results->{total_rows},
+                   offset => $results->{offset},
+                   iter => mk_iter($rows),
+                   error => $results->{error},
+                   reason => $results->{reason},
+                 }, $self;
+}
+
+sub count {
+    return shift->{count};
+}
+
+sub offset {
+    return shift->{offset};
+}
+
+sub data {
+    return shift->{data};
+}
+
+sub next {
+   my $self = shift;
+   my $key = shift;
+   return $self->{iter}->($key); 
+}
+
+sub err {
+    return shift->{error};
+}
+
+sub errstr {
+    return shift->{reason};
+}
+
+sub mk_iter {
+    my $rows = shift;
+    my @list = map { @{$_->{value}} } @$rows;
+    my $index = 0;
+    return sub {
+        return if $index > $#list;
+        my $row = $list[$index];
+        $index++;
+        return $row;
+    };
 }
 
 =head1 AUTHOR
