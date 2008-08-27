@@ -232,6 +232,7 @@ sub new {
                    count => $results->{total_rows},
                    offset => $results->{offset},
                    iter => mk_iter($rows),
+                   iter_key => mk_iter($rows, 'key'),
                    error => $results->{error},
                    reason => $results->{reason},
                  }, $self;
@@ -251,8 +252,12 @@ sub data {
 
 sub next {
    my $self = shift;
-   my $key = shift;
-   return $self->{iter}->($key); 
+   return $self->{iter}->(); 
+}
+
+sub next_key {
+    my $self = shift;
+   return $self->{iter_key}->(); 
 }
 
 sub err {
@@ -265,11 +270,12 @@ sub errstr {
 
 sub mk_iter {
     my $rows = shift;
+    my $key = shift || 'value';
     my $mapper = sub {
         my $row = shift;
-        return @{ $_->{value} }
-            if ref($_{value}) eq 'ARRAY';
-        return $_->{value};
+        return @{ $_->{$key} }
+            if ref($_{$key}) eq 'ARRAY';
+        return $_->{$key};
     };
     my @list = map { $mapper->($_) } @$rows;
     my $index = 0;
