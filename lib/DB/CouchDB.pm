@@ -250,6 +250,14 @@ sub data {
     return shift->{data};
 }
 
+sub err {
+    return shift->{error};
+}
+
+sub errstr {
+    return shift->{reason};
+}
+
 sub next {
    my $self = shift;
    return $self->{iter}->(); 
@@ -260,24 +268,35 @@ sub next_key {
    return $self->{iter_key}->(); 
 }
 
-sub err {
-    return shift->{error};
-}
-
-sub errstr {
-    return shift->{reason};
+sub next_for_key {
+    my $self = shift;
+    my $key = shift;
+    my $ph = $key."_iter";
+    if (! defined $self->{$ph} ) {
+        my $iter = mk_iter($self->{data}, 'value', sub {
+            my $item = shift;
+            warn "Found match for $key", $/
+                if $item->{key} eq $key;
+            return $item 
+                if $item->{key} eq $key;
+            return;
+        });
+        $self->{$ph} = $iter;
+    }
+    return $self->{$ph}->();
 }
 
 sub mk_iter {
     my $rows = shift;
     my $key = shift || 'value';
+    my $filter = shift || sub { return $_ };
     my $mapper = sub {
         my $row = shift;
         return @{ $_->{$key} }
             if ref($_{$key}) eq 'ARRAY';
         return $_->{$key};
     };
-    my @list = map { $mapper->($_) } @$rows;
+    my @list = map { $mapper->($_) } grep { $filter->($_) } @$rows;
     my $index = 0;
     return sub {
         return if $index > $#list;
