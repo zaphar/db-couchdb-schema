@@ -8,5 +8,7 @@ requires 'URI';
 
 all_from 'lib/DB/CouchDB.pm';
 
+install_script 'couch_schema_tool.pl';
+
 auto_install;
 WriteAll;

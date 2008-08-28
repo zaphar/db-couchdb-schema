@@ -13,9 +13,9 @@ my $opts = GetOptions ("dump" => \$dump,
                        "port=i"   => \$port);
 
 sub useage {
-    print "schema_tool.pl --help # print this useage", $/;
-    print "schema_tool.pl --dump --file=<filename> # dump the schema to filename", $/;
-    print "schema_tool.pl --load --file=<filename> # load the schema from the filename", $/;
+    print "couch_schema_tool.pl --help # print this useage", $/;
+    print "couch_schema_tool.pl --dump --file=<filename> # dump the schema to filename", $/;
+    print "couch_schema_tool.pl --load --file=<filename> # load the schema from the filename", $/;
 }
 
 if ( $help ) {
