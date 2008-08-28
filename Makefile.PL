@@ -3,6 +3,7 @@ use inc::Module::Install;
 name 'DB-CouchDB';
 
 requires 'JSON';
+requires 'Getopt::Long';
 requires 'LWP::UserAgent';
 requires 'URI';
 

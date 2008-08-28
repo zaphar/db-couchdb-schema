@@ -1,3 +1,4 @@
+#!/usr/bin/env perl -w
 use DB::CouchDB::Schema;
 use Getopt::Long;
 
@@ -43,11 +44,16 @@ if ($database && $host) {
         print "loading schema: ", $/, $script;
         $db->load_schema_from_script($script);
         $db->push();
-        close LFH;
+        close $fh;
         exit 0;
     } else {
         print "Did not understand options!!", $/;
         useage();
         exit 1;
     }
+} else {
+    print "Did not understand options!!", $/;
+    useage();
+    exit 1;
 }
+
