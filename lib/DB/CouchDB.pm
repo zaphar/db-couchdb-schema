@@ -53,6 +53,11 @@ sub all_dbs {
     return DB::CouchDB::Result->new($self->_call(GET => $self->_uri_all_dbs())); 
 }
 
+sub all_docs {
+    my $self = shift;
+    return DB::CouchDB::Iter->new($self->_call(GET => $self->_uri_db_docs()));
+}
+
 sub db_info {
     my $self = shift;
     return DB::CouchDB::Result->new($self->_call(GET => $self->_uri_db()));
@@ -211,7 +216,7 @@ sub _call {
     my $method  = shift;
     my $uri     = shift;
     my $content = shift;
-
+    
     my $req     = HTTP::Request->new($method, $uri);
     $req->content($content);
          
