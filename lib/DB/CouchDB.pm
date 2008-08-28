@@ -67,7 +67,6 @@ sub all_docs {
         my $argstring = _valid_view_args($args);
         $uri->query($argstring);
     }
-    warn $uri;
     return DB::CouchDB::Iter->new($self->_call(GET => $uri));
 }
 
