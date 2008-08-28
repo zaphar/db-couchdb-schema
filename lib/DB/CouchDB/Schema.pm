@@ -27,11 +27,27 @@ sub load_schema_from_db {
     my @schema;
     while ($docname = $doc_list->next_key() ) {
         my $doc = $db->get_doc($docname);
-        #delete $doc->{_rev};
+        $self->_mk_view_accessor($doc);
         push @schema, $doc;
     }
     $self->{schema} = \@schema;
     return $self;
+}
+
+sub _mk_view_accessor {
+    my $self = shift;
+    my $doc = shift;
+    my $id = $doc->{_id};
+    return unless $id =~  /^_design/;
+    my ($design) = $id =~ /^_design\/(.+)/;
+    my $views = $doc->{views};
+    for my $view (keys %$views) {
+        my $method = $design."_".$view;
+        $self->{views}{$method} = sub {
+            my $args = shift;
+            return $self->{db}->view($design."/$view", $args);
+        };
+    }
 }
 
 sub schema {
@@ -63,6 +79,8 @@ sub push {
     for my $doc ( $self->_schema_no_revs() ) {
         $db->create_named_doc($doc, $doc->{_id});
     }
+    $self->load_schema_from_db();
+    return $self;
 }
 
 sub wipe {
@@ -74,6 +92,17 @@ sub wipe {
         warn "Deleting: ".$doc->{_id}. " at revision: ".$doc->{_rev};
         warn Dump($db->delete_doc($doc->{_id}, $doc->{_rev}));
     }
+}
+
+sub AUTOLOAD {
+    my ($package, $call) = $AUTOLOAD =~ /^(.+)::(.+)$/;
+    my $self = shift;
+    if ($package eq 'DB::CouchDB::Schema') {
+        if ( exists $self->{views}{$call}) {
+            return $self->{views}{$call}->(@_);
+        }
+    }
+    die "$call method does not exist in $package";
 }
 
 1;
