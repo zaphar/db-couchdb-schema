@@ -23,7 +23,8 @@ sub load_schema_from_db {
     my $self = shift;
     my $db = $self->{db};
     #load our schema
-    my $doc_list = $db->all_docs();
+    my $doc_list = $db->all_docs({startkey => '"_design/"',
+                                  endkey   => '"_design/ZZZZZ"'});
     my @schema;
     while ($docname = $doc_list->next_key() ) {
         my $doc = $db->get_doc($docname);

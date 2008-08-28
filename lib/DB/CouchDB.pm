@@ -50,12 +50,25 @@ sub db {
 
 sub all_dbs {
     my $self = shift;
-    return DB::CouchDB::Result->new($self->_call(GET => $self->_uri_all_dbs())); 
+    my $args = shift; ## do we want to reduce the view?
+    my $uri = $self->_uri_all_dbs();
+    if ($args) {
+        my $argstring = _valid_view_args($args);
+        $uri->query($argstring);
+    }
+    return DB::CouchDB::Result->new($self->_call(GET => $uri)); 
 }
 
 sub all_docs {
     my $self = shift;
-    return DB::CouchDB::Iter->new($self->_call(GET => $self->_uri_db_docs()));
+    my $args = shift;
+    my $uri = $self->_uri_db_docs();
+    if ($args) {
+        my $argstring = _valid_view_args($args);
+        $uri->query($argstring);
+    }
+    warn $uri;
+    return DB::CouchDB::Iter->new($self->_call(GET => $uri));
 }
 
 sub db_info {
