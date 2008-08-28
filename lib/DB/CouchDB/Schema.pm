@@ -77,6 +77,7 @@ sub push {
     my $self = shift;
     my $script = shift;
     my $db = $self->{db};
+    $self->wipe();
     for my $doc ( $self->_schema_no_revs() ) {
         $db->create_named_doc($doc, $doc->{_id});
     }
@@ -93,6 +94,12 @@ sub wipe {
         warn "Deleting: ".$doc->{_id}. " at revision: ".$doc->{_rev};
         warn Dump($db->delete_doc($doc->{_id}, $doc->{_rev}));
     }
+}
+
+sub get {
+    my $self = shift;
+    my $name = shift;
+    return $self->{db}->get_doc($name);
 }
 
 sub AUTOLOAD {
