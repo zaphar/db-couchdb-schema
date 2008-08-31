@@ -10,7 +10,7 @@ $DB::CouchDB::VERSION = 0.2;
 
 =head1 NAME
 
-    DB::CouchDB - An alternative to the Net::CouchDb module
+    DB::CouchDB - A low level perl module for CouchDB
 
 =head1 VERSION
 
@@ -18,15 +18,9 @@ $DB::CouchDB::VERSION = 0.2;
 
 =head1 RATIONALE
 
-Net::CouchDb uses JSON::Any which means handling blessed objects is difficult.
-Since the JSON serializer could be any one of a number of modules setting the correct
-parameters is difficult and in fact the Net::CouchDb module doesn't allow for this.
-DB::CouchDB is intended to allow the modifying the functionality of the serializer
-for blessed objects and so on.
-
-DB::CouchDB makes no assumptions about what you will be sending to your db. You don't
-have to create special document objects to submit. It will make correct assumptions
-as much as possible and allow you to override them as much as possible.
+After working with a lot several of the CouchDB modules already in CPAN I found
+myself dissatisfied with them. Since the API for Couch is so easy I wrote my own
+which I find to have an API that better fits a CouchDB Workflow.
 
 =head1 SYNOPSIS
 
