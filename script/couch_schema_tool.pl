@@ -15,8 +15,8 @@ my $opts = GetOptions ("dump" => \$dump,
 
 sub useage {
     print "couch_schema_tool.pl --help # print this useage", $/;
-    print "couch_schema_tool.pl --dump --file=<filename> # dump the schema to filename", $/;
-    print "couch_schema_tool.pl --load --file=<filename> # load the schema from the filename", $/;
+    print "couch_schema_tool.pl --db=<database_name --host=<hostname> [--port=<db_port>] --dump --file=<filename> # dump the schema to filename", $/;
+    print "couch_schema_tool.pl --db=<database_name --host=<hostname> [--port=<db_port>] --load --file=<filename> # load the schema from the filename", $/;
 }
 
 if ( $help ) {
@@ -33,7 +33,7 @@ if ($database && $host) {
     
     if ($dump && $file) {
         open my $fh, '>', $file or die $!;
-        my $script = $db->dump();
+        my $script = $db->dump(1);
         print $fh $script;
         close $fh;
         exit 0;

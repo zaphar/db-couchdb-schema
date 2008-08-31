@@ -68,9 +68,13 @@ sub _schema_no_revs {
 
 sub dump {
     my $self = shift;
+    my $pretty = shift;
     my $db = $self->{db};
+    $db->json->pretty([$pretty]);
     my @schema = $self->_schema_no_revs();
-    return $db->json->encode(\@schema)
+    my $script = $db->json->encode(\@schema);
+    $db->json->pretty([undef]);
+    return $script;
 }
 
 sub push {
@@ -110,7 +114,6 @@ sub AUTOLOAD {
             return $self->{views}{$call}->(@_);
         }
     }
-    die "$call method does not exist in $package";
 }
 
 1;

@@ -1,12 +1,12 @@
 use Test::More;
 
-plan tests => 18;
+plan tests => 29;
 my $module = 'DB::CouchDB';
 
 use_ok($module, 'the module is useable');
 
 can_ok($module, 'new');
-my $db = $module->new(host => 'localhost');
+my $db = $module->new(host => 'localhost', db => 'foo');
 is($db->{host}, 'localhost', 'the domain has been stored');
 is($db->{port}, 5984, 'the port defaulted correctly');
 
@@ -17,19 +17,19 @@ can_ok($db, '_uri_all_dbs');
 is($db->_uri_all_dbs(), 'http://localhost:5984/_all_dbs', 'the all dbs uri is correct');
 
 can_ok($db, '_uri_db');
-is($db->_uri_db('foo'), 'http://localhost:5984/foo', 'the db uri is correct');
+is($db->_uri_db(), 'http://localhost:5984/foo', 'the db uri is correct');
 
 can_ok($db, '_uri_db_docs');
-is($db->_uri_db_docs('foo'), 'http://localhost:5984/foo/_all_docs', 'the db all docs uri is correct');
+is($db->_uri_db_docs(), 'http://localhost:5984/foo/_all_docs', 'the db all docs uri is correct');
 
 can_ok($db, '_uri_db_doc');
-is($db->_uri_db_doc('foo', 'bar'), 'http://localhost:5984/foo/bar', 'the db doc uri is correct');
+is($db->_uri_db_doc('bar'), 'http://localhost:5984/foo/bar', 'the db doc uri is correct');
 
 can_ok($db, '_uri_db_bulk_doc');
-is($db->_uri_db_bulk_doc('foo'), 'http://localhost:5984/foo/_bulk_docs', 'the db bulk doc uri is correct');
+is($db->_uri_db_bulk_doc(), 'http://localhost:5984/foo/_bulk_docs', 'the db bulk doc uri is correct');
 
 can_ok($db, '_uri_db_view');
-is($db->_uri_db_view('foo', 'bleh'), 'http://localhost:5984/foo/_view/bleh', 'the db bulk doc uri is correct');
+is($db->_uri_db_view('bleh'), 'http://localhost:5984/foo/_view/bleh', 'the db bulk doc uri is correct');
 
 can_ok($db, '_call');
 
