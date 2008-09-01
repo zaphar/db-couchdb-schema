@@ -138,7 +138,7 @@ sub dump {
     return $script;
 }
 
-=head2 dump($pretty)
+=head2 push()
 
 Pushes the current schema stored in the object to the database. Used in combination with load_schema_from_script
 you can restore or create databse schemas from a json defintion file.
@@ -151,7 +151,6 @@ sub push {
     my $self = shift;
     my $script = shift;
     my $db = $self->{db};
-    $self->wipe();
     for my $doc ( $self->_schema_no_revs() ) {
         $db->create_named_doc($doc, $doc->{_id});
     }
@@ -188,7 +187,7 @@ sub wipe {
 =head1 ACCESSORS
 
 When DB::CouchDB objects are new'ed up they create accessors for the views defined
-in the Database. Calling C<$schema->view_name(\%view_args)> will return you the data
+in the Database. Calling $schema->view_name(\%view_args) will return you the data
 for the views. See L<DB::CouchDB> view method for more information on the args for a view.
 
 =cut
