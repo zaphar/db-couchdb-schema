@@ -1,4 +1,4 @@
-#!env perl
+#!perl
 use DB::CouchDB::Schema;
 use Getopt::Long;
 
