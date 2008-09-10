@@ -1,0 +1,6 @@
+Current:
+[] Better test coverage
+[] Test::Mock::CouchDBSchema module for mocking help
+[] better server information methods
+[] view creation methods/helpers
+[] replication
