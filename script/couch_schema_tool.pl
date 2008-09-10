@@ -48,7 +48,7 @@ if ($database && $host) {
         close $fh;
         exit 0;
     } else {
-        print "Did not understand options!!", $/;
+        print "Did not understand options!! did you specify --dump or --load?", $/;
         useage();
         exit 1;
     }

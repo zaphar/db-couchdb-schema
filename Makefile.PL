@@ -5,6 +5,8 @@ name 'DB-CouchDB-Schema';
 requires 'JSON';
 requires 'Getopt::Long';
 requires 'LWP::UserAgent';
+requires 'Moose'            => '0.57';
+requires 'Carp';
 requires 'URI';
 
 all_from 'lib/DB/CouchDB/Schema.pm';

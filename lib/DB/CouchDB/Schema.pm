@@ -1,5 +1,7 @@
 package DB::CouchDB::Schema;
 use DB::CouchDB;
+use Moose;
+use Carp;
 
 our $VERSION = '0.2.1';
 
@@ -31,15 +33,20 @@ Constructor for a CouchDB Schema.
 
 =cut
 
-sub new {
+has server => ( is => 'rw', isa => 'DB::CouchDB');
+has schema => ( is => 'rw', isa => 'ArrayRef');
+has views  => ( is => 'rw', isa => 'HashRef[Code]',
+                required => 1, default => sub { {} } );
+
+sub BUILD {
     my $self = shift;
-    my $db = DB::CouchDB->new(@_);
-    $db->handle_blessed(1);
-    my $obj = bless {}, $self; 
-    $obj->{db} = $db;
-    my $doc_list = $db->all_docs();
-    my $schema = $obj->load_schema_from_db();
-    return $obj;
+    my $params = shift;
+    if (keys %$params) {
+        my $db = DB::CouchDB->new(%$params);
+        $db->handle_blessed(1);
+        $self->server($db);
+        $self->load_schema_from_db();
+    }
 }
 
 =head2 load_schema_from_script($script)
@@ -52,7 +59,7 @@ in a SQL DB only its essentially just a list of _design/* documents for the Couc
 sub load_schema_from_script {
     my $self = shift;
     my $script = shift;
-    $self->{schema} = $self->{db}->json->decode($script);
+    $self->schema($self->server->json->decode($script));
     return $self;
 }
 
@@ -68,17 +75,17 @@ a current look at the CouchDB Schema stored in your object.
 
 sub load_schema_from_db {
     my $self = shift;
-    my $db = $self->{db};
+    my $db = $self->server;
     #load our schema
     my $doc_list = $db->all_docs({startkey => '"_design/"',
                                   endkey   => '"_design/ZZZZZ"'});
     my @schema;
-    while ($docname = $doc_list->next_key() ) {
+    while (my $docname = $doc_list->next_key() ) {
         my $doc = $db->get_doc($docname);
         $self->_mk_view_accessor($doc);
         push @schema, $doc;
     }
-    $self->{schema} = \@schema;
+    $self->schema(\@schema);
     return $self;
 }
 
@@ -91,10 +98,21 @@ sub _mk_view_accessor {
     my $views = $doc->{views};
     for my $view (keys %$views) {
         my $method = $design."_".$view;
-        $self->{views}{$method} = sub {
-            my $args = shift;
-            return $self->{db}->view($design."/$view", $args);
-        };
+        $self->views()->{$method} = sub {
+                my $args = shift;
+                return $self->server->view($design."/$view", $args);
+            };
+
+        #use Moose and Class::Mop to dynamically add our method
+        __PACKAGE__->meta->add_method($method, sub {
+                my $self = shift;
+                my $args = shift;
+                if ( $self->{views}{$method} ) {
+                    return $self->{views}{$method}->($args);
+                }
+                croak "The view $id does not exist in this database";
+            }
+        );
     }
 }
 
@@ -105,10 +123,6 @@ objects. You can update you schema by modifying this object if you know what
 you are doing. Then push the modifications to your database.
 
 =cut
-
-sub schema {
-    return shift->{schema};
-}
 
 sub _schema_no_revs {
     my $self = shift;
@@ -130,7 +144,7 @@ Returns the database schema as a json string.
 sub dump {
     my $self = shift;
     my $pretty = shift;
-    my $db = $self->{db};
+    my $db = $self->server;
     $db->json->pretty([$pretty]);
     my @schema = $self->_schema_no_revs();
     my $script = $db->json->encode(\@schema);
@@ -150,7 +164,7 @@ If $pretty is true then the string will be pretty printed.
 sub push {
     my $self = shift;
     my $script = shift;
-    my $db = $self->{db};
+    my $db = $self->server;
     for my $doc ( $self->_schema_no_revs() ) {
         $db->create_named_doc($doc, $doc->{_id});
     }
@@ -165,7 +179,7 @@ sub push {
 sub get {
     my $self = shift;
     my $name = shift;
-    return $self->{db}->get_doc($name);
+    return $self->server->get_doc($name);
 }
 
 =head2 wipe
@@ -177,7 +191,7 @@ only deletes views it knows about from either of the load_schema_from_* methods.
 
 sub wipe {
     my $self = shift;
-    my $db = $self->{db};
+    my $db = $self->server;
     my @schema = @{ $self->schema() };
     for my $doc (@schema) {
         $db->delete_doc($doc->{_id}, $doc->{_rev});
@@ -192,14 +206,14 @@ for the views. See L<DB::CouchDB> view method for more information on the args f
 
 =cut
 
-sub AUTOLOAD {
-    my ($package, $call) = $AUTOLOAD =~ /^(.+)::(.+)$/;
-    my $self = shift;
-    if ($package eq 'DB::CouchDB::Schema') {
-        if ( exists $self->{views}{$call}) {
-            return $self->{views}{$call}->(@_);
-        }
-    }
-}
+#sub AUTOLOAD {
+#    my ($package, $call) = $AUTOLOAD =~ /^(.+)::(.+)$/;
+#    my $self = shift;
+#    if ($package eq 'DB::CouchDB::Schema') {
+#        if ( exists $self->{views}{$call}) {
+#            return $self->{views}{$call}->(@_);
+#        }
+#    }
+#}
 
 1;
