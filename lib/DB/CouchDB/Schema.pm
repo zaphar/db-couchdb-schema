@@ -95,8 +95,22 @@ dumps the entire db to a file for backup
 
 =cut
 
-sub dump_db {
-
+#TODO(jwall) tool to dump the whole db to a backup file
+sub dump_whole_db {
+    my $self = shift;
+    my $pretty = shift;
+    my $db = $self->server;
+    #load our schema
+    my $doc_list = $db->all_docs();
+    my @docs;
+    while (my $docname = $doc_list->next_key() ) {
+        my $doc = $db->get_doc($docname);
+        push @docs, $doc;
+    }
+    $db->json->pretty([$pretty]);
+    my $script = $db->json->encode(\@docs);
+    $db->json->pretty([undef]);
+    return $script;
 }
 
 sub _mk_view_accessor {
@@ -148,6 +162,7 @@ sub _schema_no_revs {
 =head2 dump($pretty)
 
 Returns the database schema as a json string.
+if $pretty is true then the dump will be pretty printed
 
 =cut
 
@@ -162,20 +177,37 @@ sub dump {
     return $script;
 }
 
+
 =head2 push()
 
 Pushes the current schema stored in the object to the database. Used in combination with load_schema_from_script
 you can restore or create databse schemas from a json defintion file.
 
-If $pretty is true then the string will be pretty printed.
 
 =cut
 
 sub push {
     my $self = shift;
-    my $script = shift;
     my $db = $self->server;
     for my $doc ( $self->_schema_no_revs() ) {
+        $db->create_named_doc($doc, $doc->{_id});
+    }
+    $self->load_schema_from_db();
+    return $self;
+}
+
+=head2 push_from_script
+
+=cut
+
+sub push_from_script {
+    my $self = shift;
+    my $script = shift;
+    my $db = $self->server;
+    my $docs = $db->json->decode($script);
+    for my $doc ( @$docs ) {
+        delete $doc->{_rev}
+            if $doc->{_rev};
         $db->create_named_doc($doc, $doc->{_id});
     }
     $self->load_schema_from_db();
@@ -216,6 +248,5 @@ for the views. See L<DB::CouchDB> view method for more information on the args f
 
 =cut
 
-#TODO(jwall): DEMOLISH method that removes that view accessors from the class
 
 1;
