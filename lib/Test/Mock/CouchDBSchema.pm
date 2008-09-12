@@ -22,6 +22,7 @@ has mocked_docs => ( is => 'rw', isa => 'HashRef[HashRef]', required => 1,
 
 has mock_schema => ( is => 'rw', isa => 'ArrayRef', required => 1,
                     default => sub { return []; } );
+
 sub BUILD {
     my $self = shift;
     #when we have loaded this module we want to prevent schema loads
@@ -98,9 +99,9 @@ sub unmock_all_views {
     for my $mocked ( @mocks ) {
         $self->unmock_view($mocked);
     }
+    return $self;
 }
 
-#TODO(jwall): document mocking functionality;
 sub mock_doc {
     my $self = shift;
     my $docname = shift;
@@ -126,6 +127,14 @@ sub unmock_all_docs {
     for my $mocked ( @mocks ) {
         $self->unmock_doc($mocked);
     }
+    return $self;
+}
+
+sub unmock_all {
+    my $self = shift;
+    $self->unmock_all_views();
+    $self->unmock_all_docs();
+    return $self;
 }
 
 1;

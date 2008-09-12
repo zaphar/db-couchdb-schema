@@ -3,7 +3,7 @@ use DB::CouchDB;
 use Moose;
 use Carp;
 
-our $VERSION = '0.3';
+our $VERSION = '0.3.01';
 
 =head1 NAME
 
@@ -11,7 +11,7 @@ our $VERSION = '0.3';
 
 =head1 VERSION
 
-0.2.1
+0.3.01
 
 =head1 RATIONALE
 
