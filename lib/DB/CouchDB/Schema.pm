@@ -89,6 +89,16 @@ sub load_schema_from_db {
     return $self;
 }
 
+=head2 dump_db
+
+dumps the entire db to a file for backup
+
+=cut
+
+sub dump_db {
+
+}
+
 sub _mk_view_accessor {
     my $self = shift;
     my $doc = shift;
@@ -206,14 +216,6 @@ for the views. See L<DB::CouchDB> view method for more information on the args f
 
 =cut
 
-#sub AUTOLOAD {
-#    my ($package, $call) = $AUTOLOAD =~ /^(.+)::(.+)$/;
-#    my $self = shift;
-#    if ($package eq 'DB::CouchDB::Schema') {
-#        if ( exists $self->{views}{$call}) {
-#            return $self->{views}{$call}->(@_);
-#        }
-#    }
-#}
+#TODO(jwall): DEMOLISH method that removes that view accessors from the class
 
 1;

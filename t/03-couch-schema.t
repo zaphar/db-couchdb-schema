@@ -1,6 +1,6 @@
 use Test::More;
 
-plan tests => 2;
+plan tests => 5;
 
 my $module = 'DB::CouchDB::Schema';
 
@@ -23,3 +23,6 @@ can_ok($db, 'foo_bar', 'foo_boo');
 $db->views()->{'foo_bar'} = sub { return 'fubar'; };
 
 is($db->foo_bar(), 'fubar', 'the created method delegates properly');
+
+can_ok($module, 'dump_db');
+
