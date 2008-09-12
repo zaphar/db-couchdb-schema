@@ -12,12 +12,7 @@ Test::Mock::CouchDBSchema - A module to make mocking a DB::CouchDB::Schema easie
 
 =cut
 
-subtype mock_hash => as 'Hash' =>
-    where sub {
-        my $hash = $_;
-        return 1 if (exists $$hash{name} && exists $$hash{code});
-        return;
-    };
+#TODO(jwall): Lots and lots of POD
 
 has mocked_views => ( is => 'rw', isa => 'HashRef[CodeRef]', required => 1,
                      default => sub { return {}; } );
@@ -58,7 +53,8 @@ sub BUILD {
         my $next = shift;
         my $origself = shift;
         my $docname = shift;
-        return $self->mocked_docs()->{$docname};
+        return DB::CouchDB::Result
+            ->new($self->mocked_docs()->{$docname} || {} );
     };
 
     DB::CouchDB::Schema->meta
@@ -112,6 +108,24 @@ sub mock_doc {
     my $mocked = $self->mocked_docs();
     $mocked->{$docname} = $doc;
     $self->mocked_docs($mocked);
+    return $self;
+}
+
+sub unmock_doc {
+    my $self = shift;
+    my $docname = shift;
+    my $mocked = $self->mocked_docs();
+    delete $mocked->{$docname};
+    return $self;
+}
+
+sub unmock_all_docs {
+    my $self = shift;
+    my @mocks = keys %{ $self->mocked_docs() };
+    
+    for my $mocked ( @mocks ) {
+        $self->unmock_doc($mocked);
+    }
 }
 
 1;

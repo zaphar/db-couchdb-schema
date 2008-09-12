@@ -54,6 +54,11 @@ $mocker->mock_doc( 'somedoc' => { _id => 'somedoc', _rev => '1283505' } );
 is_deeply( $db->get('somedoc'), { _id => 'somedoc', _rev => '1283505' },
     'successfully mocked a document call');
 
+can_ok( $module, 'unmock_doc', 'unmock_all_docs' );
+$mocker->unmock_doc( 'somedoc' );
+is_deeply( $db->get('somedoc'), DB::CouchDB::Result->new({}), 
+    'successfully unmocked the doc' );
+
 # factories for generating test data
 sub mock_factory {
     return Test::Mock::CouchDBSchema->new();
