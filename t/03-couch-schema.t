@@ -24,5 +24,5 @@ $db->views()->{'foo_bar'} = sub { return 'fubar'; };
 
 is($db->foo_bar(), 'fubar', 'the created method delegates properly');
 
-can_ok($module, 'dump_db');
+can_ok($module, 'dump_whole_db');
 

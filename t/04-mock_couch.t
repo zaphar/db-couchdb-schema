@@ -2,7 +2,7 @@ use Test::More;
 use Test::Exception;
 use DB::CouchDB::Schema;
 
-plan tests => 11;
+plan tests => 17;
 
 my $module = 'Test::Mock::CouchDBSchema';
 my $db_module = 'DB::CouchDB::Schema';
@@ -30,7 +30,7 @@ is( ref $mocker->mocked_views()->{'foo_bar'}, 'CODE',
 
 can_ok( $module, 'unmock_view', 'unmock_all_views' );
 
-my $mocker = $mocker->unmock_view('foo_bar');
+$mocker = $mocker->unmock_view('foo_bar');
 
 isa_ok($mocker, $module);
 
