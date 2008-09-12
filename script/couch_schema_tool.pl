@@ -2,6 +2,7 @@
 use DB::CouchDB::Schema;
 use Getopt::Long;
 
+#TODO(jwall): Write POD and convert useage to do pod2useage
 my ($dump,$load,$file,$help,
     $database,$host,$port,$dsn,
     $backup, $restore,
