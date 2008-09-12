@@ -22,7 +22,7 @@ subtype mock_hash => as 'Hash' =>
 has mocked_views => ( is => 'rw', isa => 'HashRef[CodeRef]', required => 1,
                      default => sub { return {}; } );
 
-has mocked_docs => ( is => 'rw', isa => 'HashRef[CodeRef]', required => 1,
+has mocked_docs => ( is => 'rw', isa => 'HashRef[HashRef]', required => 1,
                     default => sub { return {}; } );
 
 has mock_schema => ( is => 'rw', isa => 'ArrayRef', required => 1,
@@ -30,15 +30,40 @@ has mock_schema => ( is => 'rw', isa => 'ArrayRef', required => 1,
 sub BUILD {
     my $self = shift;
     #when we have loaded this module we want to prevent schema loads
-    my $mock_schema_method = sub {
+    my $mock_schema = sub {
         my $otherself = shift;
-        $otherself->schema($self->(mock_schema));
+        $otherself->schema($self->mock_schema());
         return $otherself;
+    };
+    my $mock_schema_from_db_method = sub {
+        my $next = shift;
+        $self->{orig_schema_from_db_method} = $next;
+        return $mock_schema->(@_);
+    };
+    my $mock_schema_from_script_method = sub {
+        my $next = shift;
+        $self->{orig_schema_from_script_method} = $next;
+        return $mock_schema->(@_);
     };
 
     DB::CouchDB::Schema->meta
         ->add_around_method_modifier(
-            'load_schema_from_db' => $fake_schema_method);
+            'load_schema_from_db' => $mock_schema_from_db_method);
+
+    DB::CouchDB::Schema->meta
+        ->add_around_method_modifier(
+            'load_schema_from_script' => $mock_schema_from_db_method);
+
+    my $mock_get = sub {
+        my $next = shift;
+        my $origself = shift;
+        my $docname = shift;
+        return $self->mocked_docs()->{$docname};
+    };
+
+    DB::CouchDB::Schema->meta
+        ->add_around_method_modifier(
+            'get' => $mock_get );
 
 }
 
@@ -79,8 +104,14 @@ sub unmock_all_views {
     }
 }
 
+#TODO(jwall): document mocking functionality;
 sub mock_doc {
-
+    my $self = shift;
+    my $docname = shift;
+    my $doc = shift;
+    my $mocked = $self->mocked_docs();
+    $mocked->{$docname} = $doc;
+    $self->mocked_docs($mocked);
 }
 
 1;

@@ -2,7 +2,7 @@ use Test::More;
 use Test::Exception;
 use DB::CouchDB::Schema;
 
-plan tests => 4;
+plan tests => 11;
 
 my $module = 'Test::Mock::CouchDBSchema';
 my $db_module = 'DB::CouchDB::Schema';
@@ -42,6 +42,17 @@ ok(!$db_module->can('foo_bar'), 'the view is no longer mocked');
 dies_ok { $mocker->unmock('foo_bar'); } 
     'attempt to unmock a method that is not mocked dies';
 
+my $db = $db_module->new(host => 'localhost', db => 'metabase');
+
+my $schema = $db->schema();
+
+is( $schema, $mocker->mock_schema(), 
+    'our schema is the same as the mock schema' );
+
+$mocker->mock_doc( 'somedoc' => { _id => 'somedoc', _rev => '1283505' } );
+
+is_deeply( $db->get('somedoc'), { _id => 'somedoc', _rev => '1283505' },
+    'successfully mocked a document call');
 
 # factories for generating test data
 sub mock_factory {
@@ -53,4 +64,5 @@ sub mock_result_factory {
              { key => 'bar', value => [ { _id => 'barfu' } ] },
            ];
 }
+
 
