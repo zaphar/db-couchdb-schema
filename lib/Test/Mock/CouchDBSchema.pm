@@ -29,7 +29,7 @@ has mock_schema => ( is => 'rw', isa => 'ArrayRef', required => 1,
                     default => sub { return []; } );
 sub BUILD {
     my $self = shift;
-    #when we have loaded this we want to prevent schema loads
+    #when we have loaded this module we want to prevent schema loads
     my $mock_schema_method = sub {
         my $otherself = shift;
         $otherself->schema($self->(mock_schema));
