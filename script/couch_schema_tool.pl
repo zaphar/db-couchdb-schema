@@ -3,13 +3,15 @@ use DB::CouchDB::Schema;
 use Getopt::Long;
 
 #TODO(jwall): Write POD and convert useage to do pod2useage
-my ($dump,$load,$file,$help,
-    $database,$host,$port,$dsn,
+my ($dump,$load,$create,
     $backup, $restore,
+    $database,$host,$port,$dsn,
+    $file,$help,
    );
 
 my $opts = GetOptions ("dump" => \$dump,
                        "load" => \$load,
+                       "create" => \$create,
                        "file=s" => \$file,
                        "help"   => \$help,
                        "db=s"     => \$database,
@@ -36,16 +38,39 @@ sub useage {
     --restore  --file=filename ", $/, $/;;
 }
 
+sub db_args {
+    my %dbargs = (db     => $database,
+                  host   => $host);
+    $dbargs{port} = $port
+        if $port;
+    return %dbargs;
+}
+
 if ( $help ) {
     useage();
     exit 0;
 }
 
-if ($database && $host) {
-    my %dbargs = (db     => $database,
-                  host   => $host);
-    $dbargs{port} = $port
-        if $port;
+if ($create) {
+    if ( $host && $database ) {
+        my %dbargs = db_args();
+        my $db = DB::CouchDB::Schema->new(%dbargs);
+        eval {
+            $db->create_new_db(db => $database);
+        };
+        if ($@) {
+            print STDERR "failed to create database: $database with error".$@;
+            exit 1;
+        }
+        
+    } else {
+        useage();
+        exit 1;
+    }
+}
+
+if ( $host && $database ) {
+    my %dbargs = db_args();
     my $db = DB::CouchDB::Schema->new(%dbargs);
     
     if ($dump && $file) {

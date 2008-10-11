@@ -227,8 +227,8 @@ sub get {
 
 create a doc on the server. accepts the following arguments
 
-id => 'the name of the document' #optional if you want to let CouchDB name it for you
-doc => $object #not optional $object is the document to store in CouchDB
+    id => 'the name of the document' #optional if you want to let CouchDB name it for you
+    doc => $object #not optional $object is the document to store in CouchDB
 
 =cut
 
@@ -242,6 +242,39 @@ sub create_doc {
     } else {
         return $db->create_doc( $args{doc} );
     }
+}
+
+=head2 create_new_db(db => 'database name')
+
+create a new database in CouchDB and return a DB::CouchDB::Schema object for it.
+
+It takes the following argument
+   
+   db => 'database name' # not optional the name of the database to create.
+
+=cut
+
+sub create_new_db {
+    my $self = shift;
+    my %args = @_;
+    my $db = $self->server;
+    if ( !$args{db} ) {
+        croak "Must provide a DB to create";
+    }
+    #create a new DB::CouchDB object to represent the server
+    my $srv = DB::CouchDB->new( host => $db->host,
+                                port => $db->port,
+                                db   => $args{db},
+                              );
+    # create the database
+    my $result = $srv->create_db();
+    if ( $result->err ) {
+        croak "Failed to create the DB $args{db}:". $result->errstr;
+    }
+    #create a schema object for the databas and return ite
+    my $schema = DB::CouchDB::Schema->new();
+    $schema->server($srv);
+    return $schema;
 }
 
 =head2 wipe

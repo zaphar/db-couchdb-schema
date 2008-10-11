@@ -39,8 +39,8 @@ can_ok($module, 'dump_whole_db');
         my $doc = shift;
         return DB::CouchDB::Result->new({ _id => 'adoc', %$doc });
     });
-    can_ok($module, 'create_doc');
 
+    can_ok($module, 'create_doc');
     my $db = $module->new();
     $db->{server} = $mocker;
     ok($db->server == $mocker, 'the server is mocked');
@@ -52,4 +52,8 @@ can_ok($module, 'dump_whole_db');
     my $response2 = $db->create_doc( doc => { foo => 'bar' } );
     is($response2->{_id}, 'adoc', 'create_doc without an id works');
     is($response2->{foo}, 'bar', 'create_doc without an id has the doc attributes');
+    
+    can_ok($module, 'create_new_db');
+    
+
 }
