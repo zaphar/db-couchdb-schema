@@ -1,7 +1,7 @@
 Current:
 [] Better test coverage
-[] Test::Mock::CouchDBSchema module for mocking help
 [] better server information methods
+[] Creating a DB workflow
 [] view creation methods/helpers
 [] replication
 [] Documentation fixes

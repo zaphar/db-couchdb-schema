@@ -27,10 +27,7 @@ is($db->foo_bar(), 'fubar', 'the created method delegates properly');
 
 can_ok($module, 'dump_whole_db');
 {
-    #my $mocker = Test::MockModule->new('DB::CouchDB');
     my $mocker = Test::MockObject->new();
-    #$mocker->fake_module('DB::CouchDB', new => sub {});
-    #$mocker->fake_module('DB::CouchDB');
     $mocker->mock(create_named_doc => sub {
         my $self = shift;
         my $doc = shift;
