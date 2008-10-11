@@ -183,7 +183,6 @@ sub dump {
 Pushes the current schema stored in the object to the database. Used in combination with load_schema_from_script
 you can restore or create databse schemas from a json defintion file.
 
-
 =cut
 
 sub push {
@@ -222,6 +221,27 @@ sub get {
     my $self = shift;
     my $name = shift;
     return $self->server->get_doc($name);
+}
+
+=head2 create_doc(%sargs) 
+
+create a doc on the server. accepts the following arguments
+
+id => 'the name of the document' #optional if you want to let CouchDB name it for you
+doc => $object #not optional $object is the document to store in CouchDB
+
+=cut
+
+sub create_doc {
+    my $self = shift;
+    my %args = @_;
+    my $db = $self->server;
+    if ( $args{id} ) {
+        my $id = $args{id};
+        return $db->create_named_doc( $args{doc}, $args{id} );
+    } else {
+        return $db->create_doc( $args{doc} );
+    }
 }
 
 =head2 wipe
