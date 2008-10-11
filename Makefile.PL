@@ -8,6 +8,9 @@ requires 'LWP::UserAgent';
 requires 'Moose'            => '0.57';
 requires 'Carp';
 requires 'URI';
+requires 'Pod::Usage';
+
+build_requires 'Test::MockObject';
 
 all_from 'lib/DB/CouchDB/Schema.pm';
 

@@ -3,7 +3,7 @@ use DB::CouchDB;
 use Moose;
 use Carp;
 
-our $VERSION = '0.3.01';
+our $VERSION = '0.3.02';
 
 =head1 NAME
 

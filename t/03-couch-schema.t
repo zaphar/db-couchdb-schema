@@ -1,7 +1,7 @@
 use Test::More;
 use Test::MockObject;
 
-plan tests => 10;
+plan tests => 12;
 
 my $module = 'DB::CouchDB::Schema';
 
