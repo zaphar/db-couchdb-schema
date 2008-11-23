@@ -399,10 +399,12 @@ sub _call {
     my $content = shift;
     
     my $req     = HTTP::Request->new($method, $uri);
-    $req->content(Encode::encode('iso-8859-1', $content));
+    $req->content(Encode::encode('utf8', $content));
          
     my $ua = LWP::UserAgent->new();
-    my $response = Encode::decode('utf8', $ua->request($req)->content());
+    my $response = $ua->request($req)->decoded_content({
+		default_charset => 'utf8'
+    });
     my $decoded = $self->json()->decode($response);
     return $decoded;
 }
