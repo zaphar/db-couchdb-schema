@@ -77,8 +77,7 @@ sub load_schema_from_db {
     my $self = shift;
     my $db = $self->server;
     #load our schema
-    my $doc_list = $db->all_docs({startkey => '"_design/"',
-                                  endkey   => '"_design/ZZZZZ"'});
+    my $doc_list = $self->get_views();
     my @schema;
     while (my $docname = $doc_list->next_key() ) {
         my $doc = $db->get_doc($docname);
@@ -87,6 +86,20 @@ sub load_schema_from_db {
     }
     $self->schema(\@schema);
     return $self;
+}
+
+=head2 get_views()
+
+Returns a List of all the views in the database;
+
+=cut
+
+sub get_views {
+    my $self = shift;
+    my $db = $self->server;
+    #load our schema
+    return $db->all_docs({startkey => '"_design/"',
+                                  endkey   => '"_design/ZZZZZ"'});
 }
 
 =head2 dump_db
@@ -300,6 +313,5 @@ in the Database. Calling $schema->view_name(\%view_args) will return you the dat
 for the views. See L<DB::CouchDB> view method for more information on the args for a view.
 
 =cut
-
 
 1;

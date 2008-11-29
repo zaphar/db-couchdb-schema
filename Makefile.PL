@@ -9,6 +9,7 @@ requires 'Moose'            => '0.57';
 requires 'Carp';
 requires 'URI';
 requires 'Pod::Usage';
+requires 'Term::ReadLine';
 
 build_requires 'Test::MockObject';
 

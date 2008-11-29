@@ -17,79 +17,132 @@ has func => (is => 'rw', isa => 'Str');
 sub BUILD {
     my $self = shift;
     my %commands = (
-        'Select Design Doc' => { ord => 1, run => sub {
-                my @views; 
-                my $designnames = $self->schema()->get_views();
-                while (my $designname = $designnames->next_key()) {
-                    my $viewdoc = $self->schema()->get($designname);
-                    #for my $viewname (keys %{$viewdoc->{views}}) {
-                    #    push @views, $designname."/".$viewname;
-                    #}
-                    push @views, $designname;
-                }
-                my $view = $self->_select_from_list("Select a view:", @views);
-                $self->view($view);
-                $self->{func} = undef;
+        'Select Design Doc' => { ord => 1, 
+            run => sub {
+                $self->select_design();
             }
         },
-        'Select View Func' => {ord => 2, run => sub {
-                if ($self->view()) {
-                    my @funcs;
-                    my $designdoc = $self->schema()->get($self->view());
-                    for my $fname (keys %{$designdoc->{views}}) {
-                        push @funcs, $fname;
-                    }
-                    my $funcname = $self->_select_from_list(
-                        "Select a view function" => @funcs
-                    );
-                    $self->func($funcname);
-                } else {
-                    print STDERR "You have to select a Design Doc first",$/;
-                }
+        'Select View Func' => {ord => 2,
+            run => sub {
+                $self->select_view_func();
             }
         },
-        'Edit View Func' => {ord => 3, run => sub {
-                my $viewobj = $self->schema->get($self->view());
-                my $viewfunc = $viewobj->{views}->{$self->func};
-                use YAML;
-                my $map = $viewfunc->{map}; 
-                my $reduce = $viewfunc->{reduce};
-                my $sel = $self->_select_from_list('Select:', 'map', 'reduce');
-                my ($fh, $name) = tempfile('tempXXXX', SUFFIX => '.js');
-                print STDERR $name, $/;
-                my $editor = $ENV{EDITOR} || 'vim';
-                if ($sel eq 'map') {
-                    print $fh $map;
-                    close $fh;
-                    system("$editor $name");
-                    open $fh, $name;
-                    {
-                        local $/;
-                        $viewfunc->{map} = <$fh>;
-                    }
-                } else {
-                    print $fh $reduce;
-                    close $fh;
-                    system("$editor $name");
-                    open $fh, $name;
-                    {
-                        local $/;
-                        $viewfunc->{reduce} = <$fh>;
-                    }
-                }
-                my $result = $self->schema()->server->update_doc(
-                    $viewobj->{_id} => $viewobj
-                );
-                #use YAML;
-                #print STDERR Dump($result);
+        'Edit View Func' => {ord => 3,
+            run => sub {
+                $self->edit_view_func();
             }
         },
-        'Quit' => { ord => 100, run => sub {
+        'Quit' => { ord => 100, 
+            run => sub {
                 $self->quit();
             }
         }
     );
     $self->commands(\%commands);
+}
+
+sub reset {
+    my $self = shift;
+    $self->{view} = undef;
+    $self->{func} = undef;
+};
+
+sub select_design {
+    my $self = shift;
+    $self->{func} = undef;
+    my @views; 
+    my $designnames = $self->schema()->get_views();
+    while (my $designname = $designnames->next_key()) {
+        my $viewdoc = $self->schema()->get($designname);
+        push @views, $designname;
+    }
+    my $view = $self->_select_from_list("Select a design doc:", @views);
+    $self->view($view);
+    $self->select_view_func();
+}
+
+sub select_view_func {
+    my $self = shift;
+    if ($self->view()) {
+        my @funcs;
+        my $designdoc = $self->schema()->get($self->view());
+        for my $fname (keys %{$designdoc->{views}}) {
+            push @funcs, $fname;
+        }
+        my $funcname = $self->_select_from_list(
+            "Select a view function" => @funcs
+        );
+        $self->func($funcname);
+        $self->edit_view_func();
+    } else {
+        print STDERR "You have to select a Design Doc first",$/;
+    }
+}
+
+sub edit_view_func {
+    my $self = shift;
+    my $viewobj = $self->schema->get($self->view());
+    my $viewfunc = $viewobj->{views}->{$self->func};
+    my $map = $viewfunc->{map}; 
+    my $reduce = $viewfunc->{reduce};
+    my $sel = $self->_select_from_list('Select:', 'map', 'reduce');
+    my ($fh, $name) = tempfile('tempXXXX', SUFFIX => '.js');
+    my $editor = $ENV{EDITOR} || 'vim';
+    LOOP: while (1) {
+        if ($sel eq 'map') {
+            print $fh $map;
+            close $fh;
+            system("$editor $name");
+            open $fh, $name;
+            {
+                local $/;
+                $viewfunc->{map} = <$fh>;
+            }
+        } else {
+            print $fh $reduce;
+            close $fh;
+            system("$editor $name");
+            open $fh, $name;
+            {
+                local $/;
+                $viewfunc->{reduce} = <$fh>;
+            }
+        }
+        if ($self->test_view($viewfunc)) {
+            $self->save_view($viewobj);
+            last LOOP;
+        } else {
+            my $continue;
+            $self->get_response('Stop Editing this view?[Y/n]: ', sub {
+                my $response = shift;
+                $continue = 1 if (lc $response eq 'n');
+                return 1;
+            });
+            redo LOOP if $continue;
+            last LOOP;
+        }
+    }
+}
+
+sub save_view {
+    my $self = shift;
+    my $viewobj = shift;
+    my $result = $self->schema()->server->update_doc(
+        $viewobj->{_id} => $viewobj
+    );
+
+}
+
+sub test_view {
+    my $self = shift;
+    my $viewfunc = shift;
+    my $save;
+    $self->get_response('Save this view?[y/N]: ', sub {
+        my $response = shift;
+        $save = 1 if (lc $response eq 'y');
+        return 1;
+    });
+    return $save;
 }
 
 sub _select_from_list {
