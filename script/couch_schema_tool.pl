@@ -1,4 +1,4 @@
-#! /usr/bin/env perl -w
+#! /usr/bin/env perl
 use DB::CouchDB::Schema;
 use Getopt::Long;
 use Pod::Usage;

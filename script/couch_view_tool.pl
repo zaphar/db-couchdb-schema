@@ -1,4 +1,4 @@
-#! /usr/bin/env perl -w
+#! /usr/bin/env perl
 use DB::CouchDB::Schema::Edit;
 use Getopt::Long;
 use Pod::Usage;
@@ -12,8 +12,7 @@ my ($host,$port,$db);
 my $opts = GetOptions (
     "host=s" => \$host,
     "port=i" => \$port,
-    "db=s"   => \$db,
-    "dsn=s"  => \$dsn
+    "db=s"   => \$db
 );
 
 if ($host && $db) {

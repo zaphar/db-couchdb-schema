@@ -98,6 +98,7 @@ sub edit_view_func {
                 local $/;
                 $viewfunc->{map} = <$fh>;
             }
+            unlink($name);
         } else {
             print $fh $reduce;
             close $fh;
@@ -107,6 +108,7 @@ sub edit_view_func {
                 local $/;
                 $viewfunc->{reduce} = <$fh>;
             }
+            unlink($name);
         }
         if ($self->test_view($viewfunc)) {
             $self->save_view($viewobj);
@@ -136,10 +138,11 @@ sub test_view {
     my $self = shift;
     my $viewfunc = shift;
     my $save;
-    #TODO(jwall): now test the results of this view;
     my $server = $self->schema()->server();  
     my $test = $server->temp_view($viewfunc);
-
+    if ($test->err) {
+        print $test->errstr(), $/;
+    }
     VIEW: while (my $doc = $test->next()) {
         print $server->json->encode($doc);
         my $stop;
