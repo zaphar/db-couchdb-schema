@@ -2,6 +2,7 @@ package DB::CouchDB::Schema::Edit;
 use DB::CouchDB::Schema;
 use Moose;
 use Term::ReadLine;
+use File::Temp qw/tempfile tempdir/;
 use Pod::Usage;
 
 has schema => (is => 'rw', isa => 'DB::CouchDB::Schema');
@@ -10,17 +11,68 @@ has term   => (is => 'ro', default => sub {
     }
 );
 has commands => (is => 'rw', isa => 'HashRef');
-has view => (is => 'rw');
+has view => (is => 'rw', isa => 'Str');
+has func => (is => 'rw', isa => 'Str');
 
 sub BUILD {
     my $self = shift;
     my %commands = (
-        'Select View' => { ord => 1, run => sub {
-                my @views = keys %{$self->schema()->views()};
+        'Select Design Doc' => { ord => 1, run => sub {
+                my @views; 
+                my $designnames = $self->schema()->get_views();
+                while (my $designname = $designnames->next_key()) {
+                    my $viewdoc = $self->schema()->get($designname);
+                    #for my $viewname (keys %{$viewdoc->{views}}) {
+                    #    push @views, $designname."/".$viewname;
+                    #}
+                    push @views, $designname;
+                }
                 my $view = $self->_select_from_list("Select a view:", @views);
+                $self->view($view);
+                $self->{func} = undef;
             }
         },
-        'Edit View' => {ord => 2, run => sub {
+        'Select View Func' => {ord => 2, run => sub {
+                if ($self->view()) {
+                    my @funcs;
+                    my $designdoc = $self->schema()->get($self->view());
+                    for my $fname (keys %{$designdoc->{views}}) {
+                        push @funcs, $fname;
+                    }
+                    my $funcname = $self->_select_from_list(
+                        "Select a view function" => @funcs
+                    );
+                    $self->func($funcname);
+                } else {
+                    print STDERR "You have to select a Design Doc first",$/;
+                }
+            }
+        },
+        'Edit View Func' => {ord => 3, run => sub {
+                my $viewobj = $self->schema->get($self->view());
+                my $viewfunc = $viewobj->{views}->{$self->func};
+                use YAML;
+                my $map = $viewfunc->{map}; 
+                my $reduce = $viewfunc->{reduce};
+                my $sel = $self->_select_from_list('Select:', 'map', 'reduce');
+                my ($fh, $name) = tempfile('tempXXXX', SUFFIX => '.js');
+                print STDERR $name, $/;
+                my $editor = $ENV{EDITOR} || 'vim';
+                if ($sel eq 'map') {
+                    print STDERR "asked to edit the map function";
+                    print $fh $map;
+                    system("$editor $name");
+                    close $fh;
+                } else {
+                    print STDERR "asked to edit the reduce function";
+                    print $fh $reduce;
+                    system("$editor $name");
+                    close $fh;
+                }
+            }
+        },
+        'Quit' => { ord => 100, run => sub {
+                $self->quit();
             }
         }
     );
@@ -47,6 +99,7 @@ sub _select_from_list {
         } else {
             if (my ($item) = grep {$_ =~ /$request/i } @list) {
                 $selection = $item;
+                $self->term()->addhistory($item);
                 #print STDERR "the selection was $selection", $/;
                 return 1;
             }
@@ -54,7 +107,6 @@ sub _select_from_list {
         return;
     });
     return $selection;
-    
 };
 
 sub run {
@@ -66,24 +118,40 @@ sub run {
     $self->quit();
 }
 
+sub show_meta {
+    my $self = shift;
+    print "Editing: ".
+        $self->schema()->server()->host() . "/" . 
+        $self->schema()->server()->db();
+    print $/;
+    if ($self->view) {
+        print "Selected View: ". $self->view(),$/;
+    }
+    if ($self->func) {
+        print "Selected View Func: ". $self->func(),$/;
+    }
+    print $/;
+}
+
 sub process_commands {
     my $self = shift;
     my $commands = $self->commands();
     my @coms = sort { $commands->{$a}->{ord} <=> $commands->{$b}->{ord} } 
         keys %{$self->commands()};
-    my $command = $self->_select_from_list("please choose an action:", @coms);
-    $self->commands()->{$command}->{run}->();
+    while (1) {
+        $self->show_meta();
+        my $command = $self->_select_from_list("please choose an action:", @coms);
+        $self->commands()->{$command}->{run}->();
+    }
 }
 
 sub connect {
     my $self = shift;
     my $hostname;
-    $self->get_response('Enter couchdb hostname: ', sub {
+    $self->get_response('Enter couchdb host[localhost]: ', sub {
         $hostname = shift;
         if (!$hostname) {
-            print STDERR "you must enter a hostname.";
-            $self->quit();
-            return;
+            $hostname = 'localhost';
         }
         return 1;
     }, 1);
