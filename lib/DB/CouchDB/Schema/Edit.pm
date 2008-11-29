@@ -59,16 +59,29 @@ sub BUILD {
                 print STDERR $name, $/;
                 my $editor = $ENV{EDITOR} || 'vim';
                 if ($sel eq 'map') {
-                    print STDERR "asked to edit the map function";
                     print $fh $map;
-                    system("$editor $name");
                     close $fh;
+                    system("$editor $name");
+                    open $fh, $name;
+                    {
+                        local $/;
+                        $viewfunc->{map} = <$fh>;
+                    }
                 } else {
-                    print STDERR "asked to edit the reduce function";
                     print $fh $reduce;
-                    system("$editor $name");
                     close $fh;
+                    system("$editor $name");
+                    open $fh, $name;
+                    {
+                        local $/;
+                        $viewfunc->{reduce} = <$fh>;
+                    }
                 }
+                my $result = $self->schema()->server->update_doc(
+                    $viewobj->{_id} => $viewobj
+                );
+                #use YAML;
+                #print STDERR Dump($result);
             }
         },
         'Quit' => { ord => 100, run => sub {
