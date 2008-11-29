@@ -15,7 +15,8 @@ build_requires 'Test::MockObject';
 
 all_from 'lib/DB/CouchDB/Schema.pm';
 
-#install_script 'couch_schema_tool.pl';
+install_script 'couch_schema_tool.pl';
+install_script 'couch_view_tool.pl';
 
 auto_install;
 WriteAll;
