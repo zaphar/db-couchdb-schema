@@ -130,13 +130,27 @@ sub save_view {
     my $result = $self->schema()->server->update_doc(
         $viewobj->{_id} => $viewobj
     );
-
 }
 
 sub test_view {
     my $self = shift;
     my $viewfunc = shift;
     my $save;
+    #TODO(jwall): now test the results of this view;
+    my $server = $self->schema()->server();  
+    my $test = $server->temp_view($viewfunc);
+
+    VIEW: while (my $doc = $test->next()) {
+        print $server->json->encode($doc);
+        my $stop;
+        $self->get_response('Continue viewing results?[Y/n]', sub {
+            my $response = shift;
+            $stop = 1 if (lc $response eq 'n');
+            return 1;
+        });
+        last VIEW if ($stop); 
+    }
+    
     $self->get_response('Save this view?[y/N]: ', sub {
         my $response = shift;
         $save = 1 if (lc $response eq 'y');

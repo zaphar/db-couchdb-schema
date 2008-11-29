@@ -217,7 +217,18 @@ sub create_doc {
     my $self = shift;
     my $doc = shift;
     my $jdoc = $self->json()->encode($doc);
-    return DB::CouchDB::Result->new($self->_call(POST => $self->_uri_db(), $jdoc));
+    return DB::CouchDB::Result->new(
+        $self->_call(POST => $self->_uri_db(), $jdoc)
+    );
+}
+
+sub temp_view {
+    my $self = shift;
+    my $doc = shift;
+    my $jdoc = $self->json()->encode($doc);
+    return DB::CouchDB::Iter->new(
+        $self->_call(POST => $self->uri_db_temp_view(), $jdoc)
+    );
 }
 
 =head2 create_named_doc
@@ -390,6 +401,15 @@ sub _uri_db_view {
     my $uri = $self->uri();
     $uri->path('/'.$db.'/_view/'.$view);
     return $uri;
+}
+
+sub uri_db_temp_view {
+    my $self = shift;
+    my $db = $self->{db};
+    my $uri = $self->uri();
+    $uri->path('/'.$db.'/_temp_view');
+    return $uri;
+
 }
 
 sub _call {
