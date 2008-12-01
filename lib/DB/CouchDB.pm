@@ -422,10 +422,17 @@ sub _call {
     $req->content(Encode::encode('utf8', $content));
          
     my $ua = LWP::UserAgent->new();
-    my $response = $ua->request($req)->decoded_content({
+    my $return = $ua->request($req);
+    my $response = $return->decoded_content({
 		default_charset => 'utf8'
     });
-    my $decoded = $self->json()->decode($response);
+    my $decoded;
+    eval {
+        $decoded = $self->json()->decode($response);
+    };
+    if ($@) {
+        return {error => $return->code, reason => $response}; 
+    }
     return $decoded;
 }
 

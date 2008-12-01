@@ -83,10 +83,12 @@ sub edit_view_func {
     my $self = shift;
     my $viewobj = $self->schema->get($self->view());
     my $viewfunc = $viewobj->{views}->{$self->func};
-    my $map = $viewfunc->{map}; 
-    my $reduce = $viewfunc->{reduce};
+    my $map; 
+    my $reduce;
+    $map = $viewfunc->{map} if $viewfunc->{map}; 
+    $reduce = $viewfunc->{reduce} if $viewfunc->{reduce};
     my $sel = $self->_select_from_list('Select:', 'map', 'reduce');
-    my ($fh, $name) = tempfile('tempXXXX', SUFFIX => '.js');
+    my ($fh, $name) = tempfile('tmpXXXXXXXXXX', SUFFIX => '.js');
     my $editor = $ENV{EDITOR} || 'vim';
     LOOP: while (1) {
         if ($sel eq 'map') {
@@ -110,6 +112,10 @@ sub edit_view_func {
             }
             unlink($name);
         }
+        if ($viewfunc->{reduce} eq '' ||
+                $viewfunc->{reduce} == undef) {
+            delete $$viewfunc{reduce};
+        }
         if ($self->test_view($viewfunc)) {
             $self->save_view($viewobj);
             last LOOP;
@@ -131,7 +137,7 @@ sub save_view {
     my $viewobj = shift;
     my $result = $self->schema()->server->update_doc(
         $viewobj->{_id} => $viewobj
-    );
+    ); 
 }
 
 sub test_view {
@@ -141,7 +147,8 @@ sub test_view {
     my $server = $self->schema()->server();  
     my $test = $server->temp_view($viewfunc);
     if ($test->err) {
-        print $test->errstr(), $/;
+        warn $test->errstr(), $/;
+        return;
     }
     VIEW: while (my $doc = $test->next()) {
         print $server->json->encode($doc);
