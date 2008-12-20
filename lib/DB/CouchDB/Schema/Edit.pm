@@ -112,8 +112,9 @@ sub edit_view_func {
             }
             unlink($name);
         }
-        if ($viewfunc->{reduce} eq '' ||
-                $viewfunc->{reduce} == undef) {
+        if (defined $viewfunc->{reduce} && 
+            $viewfunc->{reduce} eq '' ||
+                not defined $viewfunc->{reduce}) {
             delete $$viewfunc{reduce};
         }
         if ($self->test_view($viewfunc)) {
