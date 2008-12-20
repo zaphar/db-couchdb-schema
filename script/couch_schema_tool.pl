@@ -64,13 +64,13 @@ if ( $host && $database ) {
     my $db = DB::CouchDB::Schema->new(%dbargs);
     
     if ($dump && $file) {
-        open my $fh, '>', $file or die $!;
+        open my $fh, '>:encoding(UTF-8)', $file or die $!;
         my $script = $db->dump(1);
         print $fh $script;
         close $fh;
         exit 0;
     } elsif ($load && $file) {
-        open my $fh, $file or die $!;
+        open my $fh, '>:encoding(UTF-8)', $file or die $!;
         local $/;
         $script = <$fh>;
         print "loading schema: ", $/, $script;
@@ -81,14 +81,14 @@ if ( $host && $database ) {
         exit 0;
     } elsif ($backup && $file) {
         # no the backup and restore code
-        open my $fh, '>', $file or die $!;
+        open my $fh, '>:encoding(UTF-8)', $file or die $!;
         my $script = $db->dump_whole_db();
         print $fh $script;
         close $fh;
         exit 0;
     } elsif ($restore && $file) {
         # no the backup and restore code
-        open my $fh, $file or die $!;
+        open my $fh, '>:encoding(UTF-8)', $file or die $!;
         local $/;
         $script = <$fh>;
         print "loading data: ", $/, $script;
