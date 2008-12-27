@@ -222,6 +222,14 @@ sub create_doc {
     );
 }
 
+=head2 temp_view
+
+runs a temporary view.
+
+    my $results = $db->temp_view($view_object);
+
+=cut
+
 sub temp_view {
     my $self = shift;
     my $doc = shift;

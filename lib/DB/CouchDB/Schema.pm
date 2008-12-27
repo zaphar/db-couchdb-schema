@@ -311,6 +311,10 @@ sub wipe {
 When DB::CouchDB objects are new'ed up they create accessors for the views defined
 in the Database. Calling $schema->view_name(\%view_args) will return you the data
 for the views. See L<DB::CouchDB> view method for more information on the args for a view.
+The view_name gets translated as follows:
+
+    #for view _design/docs/all
+    my $rs = $schema->docs_all({group => "true"});
 
 =cut
 
