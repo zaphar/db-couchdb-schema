@@ -7,15 +7,9 @@ use LWP::UserAgent;
 use URI;
 use Encode;
 
-$DB::CouchDB::VERSION = 0.2;
-
 =head1 NAME
 
     DB::CouchDB - A low level perl module for CouchDB
-
-=head1 VERSION
-
-0.2
 
 =head1 RATIONALE
 
@@ -514,7 +508,7 @@ sub mk_iter {
     my $mapper = sub {
         my $row = shift;
         return @{ $row->{$key} }
-            if ref($row->{$key}) eq 'ARRAY';
+            if ref($row->{$key}) eq 'ARRAY' && $key ne 'key';
         return $row->{$key};
     };
     my @list = map { $mapper->($_) } grep { $filter->($_) } @$rows;
