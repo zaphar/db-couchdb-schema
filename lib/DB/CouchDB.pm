@@ -409,7 +409,7 @@ sub uri_db_temp_view {
     my $self = shift;
     my $db = $self->{db};
     my $uri = $self->uri();
-    $uri->path('/'.$db.'/_temp_view');
+    $uri->path('/'.$db.'/_slow_view');
     return $uri;
 
 }
