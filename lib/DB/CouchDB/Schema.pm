@@ -136,16 +136,14 @@ sub _mk_view_accessor {
     for my $view (keys %$views) {
         my $method = $design."_".$view;
         $self->views()->{$method} = sub {
-                my $args = shift;
-                return $self->server->view($design."/$view", $args);
+                return $self->server->view($design."/$view", @_);
             };
 
         #use Moose and Class::Mop to dynamically add our method
         __PACKAGE__->meta->add_method($method, sub {
                 my $self = shift;
-                my $args = shift;
                 if ( $self->{views}{$method} ) {
-                    return $self->{views}{$method}->($args);
+                    return $self->{views}{$method}->(@_);
                 }
                 croak "The view $id does not exist in this database";
             }

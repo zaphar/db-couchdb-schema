@@ -70,7 +70,7 @@ if ( $host && $database ) {
         close $fh;
         exit 0;
     } elsif ($load && $file) {
-        open my $fh, '>:encoding(UTF-8)', $file or die $!;
+        open my $fh, '<:encoding(UTF-8)', $file or die $!;
         local $/;
         $script = <$fh>;
         print "loading schema: ", $/, $script;
@@ -88,7 +88,7 @@ if ( $host && $database ) {
         exit 0;
     } elsif ($restore && $file) {
         # no the backup and restore code
-        open my $fh, '>:encoding(UTF-8)', $file or die $!;
+        open my $fh, '<:encoding(UTF-8)', $file or die $!;
         local $/;
         $script = <$fh>;
         print "loading data: ", $/, $script;
