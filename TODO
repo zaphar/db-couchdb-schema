@@ -1,7 +1,6 @@
 Current:
 [] Better test coverage
 [] Constants for HTTP API args (views, and such)
-[] Document delete
 [] Document update
 [] better server information methods
 [] Creating a DB workflow

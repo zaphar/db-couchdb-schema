@@ -234,6 +234,20 @@ sub get {
     return $self->server->get_doc($name);
 }
 
+=head2 delete($doc)
+
+delete a doc from the database
+
+=cut
+
+sub delete {
+    my $self = shift;
+    my $doc  = shift;
+    my $name = $doc->{_id};
+    my $rev  = $doc->{_rev};
+    return $self->server->delete_doc($name, $rev);
+}
+
 =head2 create_doc(%sargs) 
 
 create a doc on the server. accepts the following arguments
