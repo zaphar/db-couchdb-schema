@@ -5,34 +5,6 @@ use Carp;
 
 our $VERSION = '0.3.05';
 
-=head1 NAME
-
-    DB::CouchDB::Schema - A Schema driven CouchDB module
-
-=head1 VERSION
-
-0.3.01
-
-=head1 RATIONALE
-
-After working with several of the CouchDB modules already in CPAN I found
-myself dissatisfied with them. DB::CouchDB::Schema is intended to approach the
-CouchDB Workflow from the standpoint of the schema. It provides tools for dumping
-and restoring the views that define your schema and for querying the views in your
-schema easily.
-
-=head1 METHODS
-
-=head2 new(%opts)
-
-    my $schema = DB::CouchDB::Schema->new(host => $hostname,
-                                          port => $db_port, # optional defaults to 5984
-                                          db   => $databse_name);
-
-Constructor for a CouchDB Schema.
-
-=cut
-
 has server => ( is => 'rw', isa => 'DB::CouchDB');
 has schema => ( is => 'rw', isa => 'ArrayRef');
 has views  => ( is => 'rw', isa => 'HashRef[Code]',
@@ -49,29 +21,12 @@ sub BUILD {
     }
 }
 
-=head2 load_schema_from_script($script)
-
-loads a CouchDB Schema from a json script file. This is sort of like the DDL
-in a SQL DB only its essentially just a list of _design/* documents for the CouchDB
-
-=cut
-
 sub load_schema_from_script {
     my $self = shift;
     my $script = shift;
     $self->schema($self->server->json->decode($script));
     return $self;
 }
-
-=head2 load_schema_from_db()
-
-Loads a CouchDB Schema from the Database on the server. this can later be dumped
-to a file and pushed to a database using load_schema_from_script.
-
-This method gets called for you during object construction so that you will have
-a current look at the CouchDB Schema stored in your object.
-
-=cut
 
 sub load_schema_from_db {
     my $self = shift;
@@ -88,12 +43,6 @@ sub load_schema_from_db {
     return $self;
 }
 
-=head2 get_views()
-
-Returns a List of all the views in the database;
-
-=cut
-
 sub get_views {
     my $self = shift;
     my $db = $self->server;
@@ -102,13 +51,6 @@ sub get_views {
                                   endkey   => '"_design/ZZZZZ"'});
 }
 
-=head2 dump_db
-
-dumps the entire db to a file for backup
-
-=cut
-
-#TODO(jwall) tool to dump the whole db to a backup file
 sub dump_whole_db {
     my $self = shift;
     my $pretty = shift;
@@ -151,14 +93,6 @@ sub _mk_view_accessor {
     }
 }
 
-=head2 schema
-
-Returns the database schema as an arrayref of _design/ docs serialized to perl
-objects. You can update you schema by modifying this object if you know what
-you are doing. Then push the modifications to your database.
-
-=cut
-
 sub _schema_no_revs {
     my $self = shift;
     my @schema;
@@ -169,13 +103,6 @@ sub _schema_no_revs {
     }
     return @schema;
 }
-
-=head2 dump($pretty)
-
-Returns the database schema as a json string.
-if $pretty is true then the dump will be pretty printed
-
-=cut
 
 sub dump {
     my $self = shift;
@@ -188,14 +115,6 @@ sub dump {
     return $script;
 }
 
-
-=head2 push()
-
-Pushes the current schema stored in the object to the database. Used in combination with load_schema_from_script
-you can restore or create databse schemas from a json defintion file.
-
-=cut
-
 sub push {
     my $self = shift;
     my $db = $self->server;
@@ -205,10 +124,6 @@ sub push {
     $self->load_schema_from_db();
     return $self;
 }
-
-=head2 push_from_script
-
-=cut
 
 sub push_from_script {
     my $self = shift;
@@ -224,38 +139,25 @@ sub push_from_script {
     return $self;
 }
 
-=head2 get($doc)
-
-=cut
-
 sub get {
     my $self = shift;
     my $name = shift;
     return $self->server->get_doc($name);
 }
 
-=head2 delete($doc)
+sub update_doc {
+    my $self = shift;
+    my $doc = shift;
+    return $self->server->update_doc($doc->{_id}, $doc);
+}
 
-delete a doc from the database
-
-=cut
-
-sub delete {
+sub delete_doc {
     my $self = shift;
     my $doc  = shift;
     my $name = $doc->{_id};
     my $rev  = $doc->{_rev};
     return $self->server->delete_doc($name, $rev);
 }
-
-=head2 create_doc(%sargs) 
-
-create a doc on the server. accepts the following arguments
-
-    id => 'the name of the document' #optional if you want to let CouchDB name it for you
-    doc => $object #not optional $object is the document to store in CouchDB
-
-=cut
 
 sub create_doc {
     my $self = shift;
@@ -268,16 +170,6 @@ sub create_doc {
         return $db->create_doc( $args{doc} );
     }
 }
-
-=head2 create_new_db(db => 'database name')
-
-create a new database in CouchDB and return a DB::CouchDB::Schema object for it.
-
-It takes the following argument
-   
-   db => 'database name' # not optional the name of the database to create.
-
-=cut
 
 sub create_new_db {
     my $self = shift;
@@ -302,13 +194,6 @@ sub create_new_db {
     return $schema;
 }
 
-=head2 wipe
-
-Wipes the schema from the database. Only deletes the views not data and
-only deletes views it knows about from either of the load_schema_from_* methods.
-
-=cut
-
 sub wipe {
     my $self = shift;
     my $db = $self->server;
@@ -317,6 +202,103 @@ sub wipe {
         $db->delete_doc($doc->{_id}, $doc->{_rev});
     }
 }
+
+=head1 NAME
+
+    DB::CouchDB::Schema - A Schema driven CouchDB module
+
+=head1 VERSION
+
+0.3.01
+
+=head1 RATIONALE
+
+After working with several of the CouchDB modules already in CPAN I found
+myself dissatisfied with them. DB::CouchDB::Schema is intended to approach the
+CouchDB Workflow from the standpoint of the schema. It provides tools for dumping
+and restoring the views that define your schema and for querying the views in your
+schema easily.
+
+=head1 METHODS
+
+=head2 new(%opts)
+
+    my $schema = DB::CouchDB::Schema->new(host => $hostname,
+                                          port => $db_port, # optional defaults to 5984
+                                          db   => $databse_name);
+
+Constructor for a CouchDB Schema.
+
+=head2 load_schema_from_script($script)
+
+loads a CouchDB Schema from a json script file. This is sort of like the DDL
+in a SQL DB only its essentially just a list of _design/* documents for the CouchDB
+
+=head2 load_schema_from_db()
+
+Loads a CouchDB Schema from the Database on the server. this can later be dumped
+to a file and pushed to a database using load_schema_from_script.
+
+This method gets called for you during object construction so that you will have
+a current look at the CouchDB Schema stored in your object.
+
+=head2 get_views()
+
+Returns a List of all the views in the database;
+
+=head2 dump_db
+
+dumps the entire db to a file for backup
+
+=head2 schema
+
+Returns the database schema as an arrayref of _design/ docs serialized to perl
+objects. You can update you schema by modifying this object if you know what
+you are doing. Then push the modifications to your database.
+
+=head2 dump($pretty)
+
+Returns the database schema as a json string.
+if $pretty is true then the dump will be pretty printed
+
+=head2 push()
+
+Pushes the current schema stored in the object to the database. Used in combination with load_schema_from_script
+you can restore or create databse schemas from a json defintion file.
+
+=head2 push_from_script
+
+=head2 get($docname)
+
+get a doc from the database
+
+=head2 delete_doc($doc)
+
+delete a doc from the database
+
+=head2 update_doc($doc)
+
+update a doc in the database
+
+=head2 create_doc(%sargs) 
+
+create a doc on the server. accepts the following arguments
+
+    id => 'the name of the document' #optional if you want to let CouchDB name it for you
+    doc => $object #not optional $object is the document to store in CouchDB
+
+=head2 create_new_db(db => 'database name')
+
+create a new database in CouchDB and return a DB::CouchDB::Schema object for it.
+
+It takes the following argument
+   
+   db => 'database name' # not optional the name of the database to create.
+
+=head2 wipe
+
+Wipes the schema from the database. Only deletes the views not data and
+only deletes views it knows about from either of the load_schema_from_* methods.
 
 =head1 ACCESSORS
 
