@@ -425,9 +425,9 @@ sub _call {
          
     my $ua = LWP::UserAgent->new();
     my $return = $ua->request($req);
-    my $response = $return->decoded_content({
+    my $response = $return->decoded_content(
 		default_charset => 'utf8'
-    });
+    );
     my $decoded;
     eval {
         $decoded = $self->json()->decode($response);

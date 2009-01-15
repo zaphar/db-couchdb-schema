@@ -3,6 +3,8 @@ use Test::Moose;
 use Test::MockObject;
 use Test::MockModule;
 use Test::Exception;
+use warnings;
+use strict;
 
 plan tests => 12;
 
@@ -20,7 +22,7 @@ has_attribute_ok($module, 'server');
     my $mock = mock_couchdb();
     my $db = $module->new();
     ok(!$db->server(), 'the server attribute is not set');
-    my $db = $module->new(host => 'fakehost', db => 'fakedatabase');
+    $db = $module->new(host => 'fakehost', db => 'fakedatabase');
     ok($db->server(), 'the server attribute is set');
     is($db->server->handle_blessed(), 1, 'handle_blessed has been set to one');
 
