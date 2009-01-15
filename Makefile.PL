@@ -11,6 +11,7 @@ requires 'URI';
 requires 'Pod::Usage';
 requires 'Term::ReadLine';
 
+build_requires 'Test::Exception';
 build_requires 'Test::MockObject';
 build_requires 'Test::MockModule';
 build_requires 'Test::More';
