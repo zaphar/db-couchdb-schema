@@ -6,7 +6,7 @@ use Test::Exception;
 use warnings;
 use strict;
 
-plan tests => 12;
+plan tests => 24;
 
 my $module = 'DB::CouchDB::Schema';
 
