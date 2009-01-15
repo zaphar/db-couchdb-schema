@@ -176,7 +176,7 @@ sub create_new_db {
     my %args = @_;
     my $db = $self->server;
     if ( !$args{db} ) {
-        croak "Must provide a DB to create";
+        croak "Must provide a db to create";
     }
     #create a new DB::CouchDB object to represent the server
     my $srv = DB::CouchDB->new( host => $db->host,
@@ -186,9 +186,9 @@ sub create_new_db {
     # create the database
     my $result = $srv->create_db();
     if ( $result->err ) {
-        croak "Failed to create the DB $args{db}:". $result->errstr;
+        croak "Failed to create the DB $args{db}: ". $result->errstr;
     }
-    #create a schema object for the databas and return ite
+    #create a schema object for the database and return ite
     my $schema = DB::CouchDB::Schema->new();
     $schema->server($srv);
     return $schema;
