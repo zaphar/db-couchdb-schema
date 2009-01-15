@@ -1,5 +1,6 @@
 Current:
 [] Better test coverage
+[] replication
 [] Constants for HTTP API args (views, and such)
 [] better server information methods
 [] view creation methods/helpers

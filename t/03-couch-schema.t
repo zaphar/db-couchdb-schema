@@ -99,6 +99,33 @@ has_attribute_ok($module, 'server');
 
 }
 
+#test delete_doc
+{
+    my $mocker = mock_couchdb();
+    $mocker->mock(delete_doc => sub {
+            my $self = shift;
+            my $name = shift;
+            my $rev = shift;
+            return DB::CouchDB::Result->new({ foo => 'bar' });
+        });
+    my $db = $module->new(host => 'fakehost', database => 'database');
+    my $result = $db->delete_doc({_id => "some doc", _rev => '12gh587'});
+    is($result->{foo}, 'bar', 'the result came back ok');
+}
+
+#test update_doc
+{
+    my $mocker = mock_couchdb();
+    $mocker->mock(update_doc => sub {
+            my $self = shift;
+            my $doc = shift;
+            return DB::CouchDB::Result->new({ foo => 'bar' });
+        });
+    my $db = $module->new(host => 'fakehost', database => 'database');
+    my $result = $db->update_doc({_id => 'foobar', _rev => '9hg2ul5k'});
+    is($result->{foo}, 'bar', 'the result came back ok');
+}
+
 ## fixtures
 
 sub mock_couchdb {
@@ -106,6 +133,8 @@ sub mock_couchdb {
     $mock->mock('new' => sub { 
             my $class = shift;
             my %hash = @_;
+            $hash{port} = 5984;
+            $hash{db} = 'database' if !defined $hash{db};
             return bless \%hash, $class;
         });
     $mock->mock(handle_blessed => sub {
