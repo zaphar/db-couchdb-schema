@@ -12,6 +12,9 @@ requires 'Pod::Usage';
 requires 'Term::ReadLine';
 
 build_requires 'Test::MockObject';
+build_requires 'Test::MockModule';
+build_requires 'Test::More';
+build_requires 'Test::Moose';
 
 all_from 'lib/DB/CouchDB/Schema.pm';
 
