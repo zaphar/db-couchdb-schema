@@ -81,6 +81,14 @@ port - port number of the database server
 
 json - the JSON object for serialization
 
+=item *
+
+user - the username, if usernames are setup on the db
+
+=item *
+
+password - the password, if usernames are setup on the db
+
 =back
 
 =cut
@@ -100,6 +108,14 @@ sub db {
 sub json {
     my $self = shift;
     return $self->{json};
+}
+
+sub user {
+    return shift->{'user'};
+}
+
+sub password {
+    return shift->{'password'};
 }
 
 =head2 handle_blessed
@@ -356,6 +372,13 @@ sub uri {
     return $u;
 }
 
+sub credentials {
+    my $self = shift;
+    my $netloc = join q{:},$self->{host},$self->{port};
+    my $realm = $self->{'realm'} ||'administrator';
+    return ($netloc,$realm,$self->{'user'},$self->{'password'});
+}
+
 sub _uri_all_dbs {
     my $self = shift;
     my $uri = $self->uri();
@@ -419,11 +442,16 @@ sub _call {
     my $method  = shift;
     my $uri     = shift;
     my $content = shift;
-    
+
     my $req     = HTTP::Request->new($method, $uri);
     $req->content(Encode::encode('utf8', $content));
-         
+
     my $ua = LWP::UserAgent->new();
+
+    if($self->{'user'} || $self->{'password'}){
+      $ua->credentials( $self->credentials());
+    }
+
     my $return = $ua->request($req);
     my $response = $return->decoded_content(
 		default_charset => 'utf8'
