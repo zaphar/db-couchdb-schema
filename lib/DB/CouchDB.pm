@@ -161,7 +161,7 @@ sub all_dbs {
 
 =head2 all_docs
 
-    my $dbs = $db->all_dbs() #returns a DB::CouchDB::Iterator of
+    my $docs = $db->all_dbs() #returns a DB::CouchDB::Iterator of
                              #all documents in this database
 
 =cut
@@ -230,6 +230,39 @@ sub create_doc {
     return DB::CouchDB::Result->new(
         $self->_call(POST => $self->_uri_db(), $jdoc)
     );
+}
+
+
+=head2 bulk_docs
+
+bulk_docs api call
+
+    my $docs = $db->bulk_docs($array_ref_of_docs); #returns an arrayref of
+                                                   #outcome of the bulk_docs call.
+
+   From the API page
+
+   CouchDB will return in the response an id and revision for every
+   document passed as content to a bulk insert, even for those that
+   were just deleted.
+
+   If the _rev does not match the current version of the document,
+   then that particular document will not be saved and will be
+   reported as a conflict, but this does not prevent other documents
+   in the batch from being saved.
+
+   see http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API for more
+   information
+
+=cut
+
+sub bulk_docs {
+    my $self = shift;
+    my $docref = shift;
+    my $jdocs = $self->json()->encode({'docs'=>$docref});
+    my $uri = $self-> _uri_db_bulk_doc();
+    my $array_ref =  $self->_call(POST => $uri, $jdocs);
+    return $array_ref;
 }
 
 =head2 temp_view
@@ -566,6 +599,10 @@ sub errstr {
     return shift->{reason};
 }
 
+1;
+
+__END__
+
 =head1 AUTHOR
 
 Jeremy Wall <jeremy@marzhillstudios.com>
@@ -608,4 +645,3 @@ L<DB::CouchDB::Schema> - higher level wrapper with some schema handling function
 
 =cut
 
-1;
