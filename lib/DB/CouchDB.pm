@@ -422,9 +422,9 @@ sub _uri_db_bulk_doc {
 sub _uri_db_view {
     my $self = shift;
     my $db = $self->{db};
-    my $view = shift;
+    my @view = split(/\//, shift, 2);
     my $uri = $self->uri();
-    $uri->path('/'.$db.'/_view/'.$view);
+    $uri->path('/'.$db.'/_design/'.$view[0].'/_view/'.$view[1]);
     return $uri;
 }
 
