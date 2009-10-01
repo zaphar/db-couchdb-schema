@@ -286,33 +286,66 @@ sub temp_view {
 
 creates a doc in the database, the document will have the id/name you specified
 
+change, pass a hashref now.
+before:
+
     my $result = $db->create_named_doc($doc, $docname) #returns a DB::CouchDB::Result object
+
+now:
+
+    my $result = $db->create_named_doc({'id'=>'somedocid','doc'=>$doc}) #returns a DB::CouchDB::Result object
+
+also, if you stuff the id into the doc as the $doc->{'_id'}, then the 'id' parameter field is optional, as whatever
+id is stored in the doc will be used instead.
 
 =cut
 
-#TODO this really needs to have the same API as all the others. $name first then $doc
 sub create_named_doc {
     my $self = shift;
-    my $doc = shift;
-    my $name = shift;
+    my $args = shift;
+    my $doc = $args->{'doc'};
+    my $id  = $args->{'id'};
+    if(!$id){
+      $id = $doc->{'_id'};
+    }
+    if (!$id){
+        return {error => '0', reason => 'no id in arguments hash, or in document'};
+    }
     my $jdoc = $self->json()->encode($doc);
-    return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
+    return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db_doc($id), $jdoc));
 }
 
 =head2 update_doc
 
 Updates a doc in the database.
 
+breaking change, pass a hashref now.
+before:
+
     my $result = $db->update_doc($docname, $doc) #returns a DB::CouchDB::Result object
+
+now:
+
+    my $result = $db->update_doc({'id'=>'somedocid','doc'=>$doc}) #returns a DB::CouchDB::Result object
+
+also, if you stuff the id into the doc as the $doc->{'_id'}, then the 'id' parameter field is optional, as whatever
+id is stored in the doc will be used instead.
 
 =cut
 
 sub update_doc {
     my $self = shift;
-    my $name = shift;
-    my $doc  = shift;
+    my $args = shift;
+    my $doc = $args->{'doc'};
+    my $id  = $args->{'id'};
+    if(!$id){
+      $id = $doc->{'_id'};
+    }
+    if (!$id){
+        return {error => '0', reason => 'no id in arguments hash, or in document'};
+    }
     my $jdoc = $self->json()->encode($doc);
-    return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db_doc($name), $jdoc));
+    return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db_doc($id), $jdoc));
 }
 
 =head2 delete_doc
@@ -494,7 +527,7 @@ sub _call {
         $decoded = $self->json()->decode($response);
     };
     if ($@) {
-        return {error => $return->code, reason => $response}; 
+        return {error => $return->code, reason => $response};
     }
     return $decoded;
 }

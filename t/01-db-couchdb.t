@@ -29,7 +29,7 @@ can_ok($db, '_uri_db_bulk_doc');
 is($db->_uri_db_bulk_doc(), 'http://localhost:5984/foo/_bulk_docs', 'the db bulk doc uri is correct');
 
 can_ok($db, '_uri_db_view');
-is($db->_uri_db_view('bleh'), 'http://localhost:5984/foo/_view/bleh', 'the db bulk doc uri is correct');
+is($db->_uri_db_view('summarize/bleh'), 'http://localhost:5984/foo/_design/summarize/_view/bleh', 'the db design view doc uri is correct');
 
 can_ok($db, '_call');
 
