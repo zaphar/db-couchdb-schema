@@ -6,6 +6,7 @@ use JSON -convert_blessed_universally;
 use LWP::UserAgent;
 use URI;
 use Encode;
+use Carp;
 
 =head1 NAME
 
@@ -328,8 +329,14 @@ now:
 
     my $result = $db->update_doc({'id'=>'somedocid','doc'=>$doc}) #returns a DB::CouchDB::Result object
 
-also, if you stuff the id into the doc as the $doc->{'_id'}, then the 'id' parameter field is optional, as whatever
-id is stored in the doc will be used instead.
+also, if you stuff the id into the doc as the $doc->{'_id'}, then the
+'id' parameter field is optional, as whatever id is stored in the doc
+will be used instead.
+
+also also, if you want to pass in a suitably modified with changes
+DB::CouchDB::Result object, then you first have to make sure you've
+called handle_blessed() to allow the json parser to properly handle
+blessed objects.
 
 =cut
 
@@ -342,7 +349,7 @@ sub update_doc {
       $id = $doc->{'_id'};
     }
     if (!$id){
-        return {error => '0', reason => 'no id in arguments hash, or in document'};
+        return DB::CouchDB::Result->new( {error => '0', reason => 'no id in arguments hash, or in document'} );
     }
     my $jdoc = $self->json()->encode($doc);
     return DB::CouchDB::Result->new($self->_call(PUT => $self->_uri_db_doc($id), $jdoc));
